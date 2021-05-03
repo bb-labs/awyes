@@ -1,5 +1,5 @@
 
-def deploy_role(self):
+def deploy_roles(self):
     role = None
 
     for role_config in self.config['roles']:

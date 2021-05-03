@@ -1,4 +1,4 @@
-def deploy_lambda(self):
+def deploy_lambdas(self):
     # Loop through the lambdas
     for lambda_config in self.config['lambdas']:
         lmbda = None

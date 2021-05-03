@@ -1,4 +1,4 @@
-from utils import hash_file, hash_url
+from .utils import hash_file, hash_url
 
 
 def publish_layer_version(self, layer_config):
@@ -12,7 +12,7 @@ def publish_layer_version(self, layer_config):
     )
 
 
-def deploy_layer(self):
+def deploy_layers(self):
     for layer_config in self.config['layers']:
         layer = None
 

@@ -1,5 +1,5 @@
 
-def deploy_event(self):
+def deploy_events(self):
     for event_config in self.config['events']:
         rule = None
 
