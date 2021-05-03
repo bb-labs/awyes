@@ -43,18 +43,21 @@ def deploy_lambdas(self):
         for event_name in lambda_config['events']:
             event = self.shared['events'][event_name]
 
-            self.__class__.event_client.put_targets(
-                Rule=event['Name'],
-                Targets=[{
-                    'Id': lambda_config['name'],
-                    'Arn': lmbda['Configuration']['FunctionArn'] if 'Configuration' in lmbda else lmbda['FunctionArn']
-                }]
-            )
+            try:
+                self.__class__.event_client.put_targets(
+                    Rule=event['Name'],
+                    Targets=[{
+                        'Id': lambda_config['name'],
+                        'Arn': lmbda['Configuration']['FunctionArn'] if 'Configuration' in lmbda else lmbda['FunctionArn']
+                    }]
+                )
 
-            self.__class__.lambda_client.add_permission(
-                FunctionName=lambda_config['name'],
-                SourceArn=event['Arn'],
-                StatementId=event['Name'],
-                Action='lambda:InvokeFunction',
-                Principal='events.amazonaws.com',
-            )
+                self.__class__.lambda_client.add_permission(
+                    FunctionName=lambda_config['name'],
+                    SourceArn=event['Arn'],
+                    StatementId=event['Name'],
+                    Action='lambda:InvokeFunction',
+                    Principal='events.amazonaws.com',
+                )
+            except Exception as e:
+                print(e)
