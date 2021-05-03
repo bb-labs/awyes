@@ -7,7 +7,9 @@ def deploy_events(self):
             rule = self.__class__.event_client.describe_rule(
                 Name=event_config['name']
             )
-        except:
+        except Exception as e:
+            print(e)
+
             rule = self.__class__.event_client.put_rule(
                 Name=event_config['name'],
                 ScheduleExpression=event_config['expression'],

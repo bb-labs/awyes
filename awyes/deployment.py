@@ -27,7 +27,7 @@ class Deployment():
         self.deploy_lambdas()
 
 
-def main():
+if __name__ == '__main__':
     script, config_path = sys.argv
 
     Deployment(config_path=config_path).deploy()

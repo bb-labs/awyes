@@ -1,16 +1,12 @@
 [tool.poetry]
 authors = ["trumanpurnell <truman.purnell@gmail.com>"]
-description = "Simplify your aws deployment"
-license = "MIT"
+description = "Simplify aws deployment"
 name = "awyes"
-version = "0.1.1"
-
-[tool.poetry.scripts]
-deploy = "awyes.deployment:main"
+version = "1.0.16"
 
 [tool.poetry.dependencies]
-python = "3.7.10"
 boto3 = "^1.17.62"
+python = "^3.7"
 requests = "^2.25.1"
 
 [build-system]

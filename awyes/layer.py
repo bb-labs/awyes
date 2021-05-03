@@ -7,7 +7,7 @@ def publish_layer_version(self, layer_config):
         Description=layer_config['description'],
         CompatibleRuntimes=layer_config['runtimes'],
         Content={
-            "ZipFile": open(f"./{layer_config['name']}.zip", 'rb').read()
+            "ZipFile": open(f"./layers/{layer_config['name']}.zip", 'rb').read()
         },
     )
 
@@ -26,12 +26,14 @@ def deploy_layers(self):
                 VersionNumber=int(layer_version)
             )
 
-        except:  # layer doesn't exist, create it
+        except Exception as e:  # layer doesn't exist, create it
+            print(e)
+
             layer = publish_layer_version(self, layer_config)
 
         # Check the hash content: if they're different, publish anew
         old_digest = str(hash_url(layer['Content']['Location']))
-        new_digest = str(hash_file(f"./{layer_config['name']}.zip"))
+        new_digest = str(hash_file(f"./layers/{layer_config['name']}.zip"))
 
         if new_digest != old_digest:
             layer = publish_layer_version(self, layer_config)
