@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  awyes:
+    image: awyes
+    build: .
+    volumes:
+      - .:/code

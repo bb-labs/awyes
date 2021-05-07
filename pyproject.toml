@@ -8,6 +8,7 @@ version = "1.0.17"
 boto3 = "^1.17.62"
 python = "^3.7"
 requests = "^2.25.1"
+docker = "^5.0.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

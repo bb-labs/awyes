@@ -1,0 +1,18 @@
+# action.yml
+name: "awyes"
+description: "Deploy code easily to aws"
+inputs:
+  config:
+    description: "Path to your aws config folder"
+    required: false
+    default: "./aws"
+  source: 
+    description: "Path to your source directory"
+    required: false
+    default: "./src"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.config }}
+    - ${{ inputs.source }}
