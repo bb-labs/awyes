@@ -31,14 +31,15 @@ class Deployment():
     from .function import deploy_lambdas
 
     def deploy(self):
-        self.deploy_images()
+        pass
+        # self.deploy_images()
         # self.deploy_roles()
         # self.deploy_events()
         # self.deploy_layers()
         # self.deploy_lambdas()
 
 
-if __name__ == '__main__':
-    script, config_path = sys.argv
+# if __name__ == '__main__':
+#     script, config_path = sys.argv
 
-    Deployment(config_path=config_path).deploy()
+#     Deployment(config_path=config_path).deploy()

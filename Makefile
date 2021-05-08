@@ -7,10 +7,15 @@ publish:
 	poetry build
 	poetry publish
 
+build:
+	docker compose build --no-cache 
+	
 run:
 	docker compose build 
 	docker compose run awyes
 
-tag:
+commit: 
+	git add -A
+	git commit -m "$(message)"
 	git tag -am "$(message)" $(shell git describe --tags --abbrev=0 | awk -F. -v OFS=. '{$$NF++;print}')
 	git push --follow-tags

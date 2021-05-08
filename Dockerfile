@@ -1,5 +1,4 @@
-# Container image that runs your code
-FROM docker
+FROM alpine
 
 # Install and link python3
 RUN apk add --update python3 py3-pip
@@ -11,5 +10,4 @@ RUN pip install awyes
 
 COPY . /code
 
-ENTRYPOINT ["/code/entrypoint.sh"]
 
