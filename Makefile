@@ -2,6 +2,7 @@
 type = patch
 
 publish:
+	poetry config http-basic.pypi trumanpurnell Smores44!
 	poetry version $(type)
 	poetry build
 	poetry publish
@@ -13,4 +14,4 @@ run:
 commit: 
 	git add -A
 	git commit -m "$(message)"
-	git tag -a v$(shell git describe --tags --abbrev=0 | ./version.sh)
+	git tag -am "$(message)" $(shell git describe --tags --abbrev=0 | awk -F. -v OFS=. '{$$NF++;print}')
