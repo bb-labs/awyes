@@ -1,4 +1,6 @@
 
+type = patch
+
 publish:
 	poetry version $(type)
 	poetry build
