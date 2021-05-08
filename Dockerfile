@@ -10,4 +10,4 @@ RUN pip install awyes
 
 COPY . /code
 
-
+ENTRYPOINT [ "python", "/code/deploy.py" ]
