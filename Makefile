@@ -9,7 +9,7 @@ publish:
 
 build:
 	docker compose build --no-cache 
-	
+
 run:
 	docker compose build 
 	docker compose run awyes
