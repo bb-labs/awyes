@@ -1,4 +1,4 @@
 
 from awyes.deployment import Deployment
 
-print(Deployment.lambda_client.list_functions())
+print(Deployment.docker_client.version())
