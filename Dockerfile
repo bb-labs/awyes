@@ -11,4 +11,5 @@ RUN pip install awyes
 
 COPY . /code
 
-CMD ls -la
+ENTRYPOINT ["/code/entrypoint.sh"]
+
