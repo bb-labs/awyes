@@ -31,8 +31,7 @@ class Deployment():
     from .function import deploy_lambdas
 
     def deploy(self):
-        pass
-        # self.deploy_images()
+        self.deploy_images()
         # self.deploy_roles()
         # self.deploy_events()
         # self.deploy_layers()

@@ -14,6 +14,9 @@ run:
 	docker compose build 
 	docker compose run awyes
 
+dev: 
+	poetry run python deploy.py
+
 commit: 
 	git add -A
 	git commit -m "$(message)"
