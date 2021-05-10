@@ -3,8 +3,9 @@ import sys
 from awyes.deployment import Deployment
 
 
-print(sys.argv)
+_, config_path, source_path = sys.argv
 
-# Deployment(
-#     config_path='/Users/trumanpurnell/Workspace/coinbase/aws/'
-# ).deploy()
+Deployment(
+    config_path=config_path,
+    source_path=source_path
+).deploy()
