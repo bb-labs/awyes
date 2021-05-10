@@ -6,7 +6,8 @@ def deploy_images(self):
         pprint([
             line for line in
             self.__class__.docker_client.build(
-                fileobj=open(self.root + '/' + dockerfile, 'rb'),
+                path=self.root,
+                dockerfile=dockerfile,
                 decode=True
             )
         ])
