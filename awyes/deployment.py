@@ -14,15 +14,18 @@ class Deployment():
     event_client = boto3.client('events')
     lambda_client = boto3.client('lambda')
 
-    def __init__(self, config_path):
+    def __init__(self, config_path, source_path):
         self.root = config_path
+        self.source = source_path
         self.shared = defaultdict(dict)
 
         with open(f"{self.root}/config.json") as config:
             self.config = json.load(config)
 
         for root, dirs, files in os.walk(self.root):
-            self.images = list(filter(lambda file: 'Dockerfile' in file, files))
+            self.images = list(
+                filter(lambda file: 'Dockerfile' in file, files)
+            )
 
     from .role import deploy_roles
     from .event import deploy_events
