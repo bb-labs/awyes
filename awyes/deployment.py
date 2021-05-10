@@ -7,16 +7,17 @@ from collections import defaultdict
 
 
 class Deployment():
-    docker_client = docker.APIClient(base_url='unix://var/run/docker.sock')
-
     ecr_client = boto3.client('ecr')
     iam_client = boto3.client('iam')
     event_client = boto3.client('events')
     lambda_client = boto3.client('lambda')
 
-    def __init__(self, config_path, source_path):
-        self.root = config_path
-        self.source = source_path
+    docker_client = docker.APIClient(base_url='unix://var/run/docker.sock')
+
+    def __init__(self, config_path, source_path, root_path='.'):
+        self.root_path = root_path
+        self.config_path = config_path
+        self.source_path = source_path
         self.shared = defaultdict(dict)
 
         with open(f"{self.root}/config.json") as config:

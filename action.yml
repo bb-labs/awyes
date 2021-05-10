@@ -2,11 +2,15 @@
 name: "awyes"
 description: "Deploy code easily to aws"
 inputs:
+  root:
+    description: "Path to your root project directory"
+    required: false
+    default: "."
   config:
     description: "Path to your aws config folder"
     required: false
     default: "./aws"
-  source: 
+  source:
     description: "Path to your source directory"
     required: false
     default: "./src"
@@ -14,5 +18,6 @@ runs:
   using: "docker"
   image: "Dockerfile"
   args:
+    - ${{ inputs.root }}
     - ${{ inputs.config }}
     - ${{ inputs.source }}

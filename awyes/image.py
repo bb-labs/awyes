@@ -1,4 +1,5 @@
 from pprint import pprint
+from os.path import normpath
 
 
 def deploy_images(self):
@@ -6,8 +7,12 @@ def deploy_images(self):
         pprint([
             line for line in
             self.__class__.docker_client.build(
-                path=self.root,
-                dockerfile=dockerfile,
-                decode=True
+                decode=True,
+                path=self.root_path,
+                dockerfile=normpath(
+                    self.root_path,
+                    self.config_path,
+                    dockerfile
+                ),
             )
         ])
