@@ -1,8 +1,8 @@
-import os
-import sys
 import json
 import boto3
 import docker
+
+from os import walk, path
 from collections import defaultdict
 
 
@@ -20,10 +20,10 @@ class Deployment():
         self.source_path = source_path
         self.shared = defaultdict(dict)
 
-        with open(f"{self.root}/config.json") as config:
+        with open(path.normpath(self.root_path, self.config_path, 'config.json')) as config:
             self.config = json.load(config)
 
-        for root, dirs, files in os.walk(self.root):
+        for root, dirs, files in os.walk(path.normpath(self.root_path, self.config_path)):
             self.images = list(
                 filter(lambda file: 'Dockerfile' in file, files)
             )
@@ -40,9 +40,3 @@ class Deployment():
         # self.deploy_events()
         # self.deploy_layers()
         # self.deploy_lambdas()
-
-
-# if __name__ == '__main__':
-#     script, config_path = sys.argv
-
-#     Deployment(config_path=config_path).deploy()
