@@ -20,10 +20,10 @@ class Deployment():
         self.source_path = source_path
         self.shared = defaultdict(dict)
 
-        with open(path.normpath(self.root_path, self.config_path, 'config.json')) as config:
+        with open(path.normpath(path.join(self.root_path, self.config_path, 'config.json'))) as config:
             self.config = json.load(config)
 
-        for root, dirs, files in os.walk(path.normpath(self.root_path, self.config_path)):
+        for _, _, files in walk(path.normpath(path.join(self.root_path, self.config_path))):
             self.images = list(
                 filter(lambda file: 'Dockerfile' in file, files)
             )
