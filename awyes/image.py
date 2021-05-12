@@ -6,6 +6,7 @@ def deploy_images(self):
     for dockerfile in self.images:
         self.__class__.docker_client.build(
             decode=True,
+            tag="",
             path=self.root_path,
             dockerfile=normpath(join(
                 self.root_path,
