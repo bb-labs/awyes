@@ -16,8 +16,8 @@ class Deployment():
     iam_client = boto3.client('iam')
     event_client = boto3.client('events')
     lambda_client = boto3.client('lambda')
-    docker_client = docker.APIClient(base_url='unix://var/run/docker.sock')
-    
+    docker_client = docker.client.from_env()
+
     def __init__(self, config_path, source_path, root_path='.'):
         # Initialize paths and shared dictionary
         self.root_path = root_path

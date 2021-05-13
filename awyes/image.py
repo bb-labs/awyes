@@ -4,13 +4,14 @@ from os.path import normpath, join
 
 
 def deploy_images(self):
-    for dockerfile in self.images:
-        image = sub(".Dockerfile", "", dockerfile)
-        remote_tag = f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{image}"
+    client = self.__class__.docker_client
 
-        self.__class__.docker_client.build(
-            decode=True,
-            tag=image,
+    for dockerfile in self.images:
+        image_name = sub(".Dockerfile", "", dockerfile)
+        remote_tag = f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{image_name}"
+
+        image = client.build(
+            tag=image_name,
             path=self.root_path,
             dockerfile=normpath(join(
                 self.root_path,
@@ -19,5 +20,5 @@ def deploy_images(self):
             ))
         )
 
-        self.__class__.docker_client.tag(image=image, repository=remote_tag)
-        self.__class__.docker_client.push(repository=remote_tag)
+        image.tag(image=image_name, repository=remote_tag)
+        image.push(repository=remote_tag)
