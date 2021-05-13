@@ -21,4 +21,5 @@ def deploy_images(self):
         )
 
         image.tag(repository=remote_tag)
-        image.push(repository=remote_tag)
+
+        client.images.push(repository=remote_tag)
