@@ -22,4 +22,5 @@ def deploy_images(self):
 
         image.tag(repository=remote_tag)
 
-        print([line for line in client.images.push(repository=remote_tag)])
+        for line in client.images.push(repository=remote_tag, stream=True):
+            print(line)
