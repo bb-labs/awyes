@@ -10,7 +10,7 @@ def deploy_images(self):
         image_name = sub(".Dockerfile", "", dockerfile)
         remote_tag = f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{image_name}"
 
-        image = client.build(
+        image = client.images.build(
             tag=image_name,
             path=self.root_path,
             dockerfile=normpath(join(
