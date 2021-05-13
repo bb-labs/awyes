@@ -22,4 +22,4 @@ def deploy_images(self):
 
         image.tag(repository=remote_tag)
 
-        pprint([line for line in client.images.push(repository=remote_tag)])
+        print([line for line in client.images.push(repository=remote_tag)])
