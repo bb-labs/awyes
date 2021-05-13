@@ -3,9 +3,9 @@ import boto3
 import docker
 
 from re import sub
-from os import walk, path
 from base64 import b64decode
 from operator import itemgetter
+from os.path import normpath, join
 from collections import defaultdict
 
 
@@ -26,13 +26,8 @@ class Deployment():
         self.shared = defaultdict(dict)
 
         # Load the config and docker images
-        with open(path.normpath(path.join(self.root_path, self.config_path, 'config.json'))) as config:
+        with open(normpath(join(self.root_path, self.config_path, 'config.json'))) as config:
             self.config = json.load(config)
-
-        for _, _, files in walk(path.normpath(path.join(self.root_path, self.config_path))):
-            self.images = list(
-                filter(lambda file: 'Dockerfile' in file, files)
-            )
 
         # Login to docker
         Deployment.docker_client.login(

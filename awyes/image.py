@@ -25,9 +25,10 @@ def deploy_images(self):
         self.shared['ecr'][repo_name] = repository
 
     # Build the images for each lambda
-    for dockerfile in self.images:
-        image_name = sub(".Dockerfile", "", dockerfile)
-        remote_repository = f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{image_name}"
+    for image_config in self.config['images']:
+        image_name, image_repo = itemgetter('name', 'repository')(image_config)
+
+        remote_repo = f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{image_repo}"
 
         image, *_ = docker.images.build(
             tag=image_name,
@@ -35,9 +36,9 @@ def deploy_images(self):
             dockerfile=normpath(join(
                 self.root_path,
                 self.config_path,
-                dockerfile
+                f"{image_name}.Dockerfile"
             ))
         )
 
-        image.tag(repository=remote_repository, tag=image_name)
-        print(docker.images.push(repository=remote_repository, tag=image_name))
+        image.tag(repository=remote_repo, tag=image_name)
+        print(docker.images.push(repository=remote_repo, tag=image_name))
