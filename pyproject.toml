@@ -2,7 +2,7 @@
 authors = ["trumanpurnell <truman.purnell@gmail.com>"]
 description = "Simplify aws deployment"
 name = "awyes"
-version = "1.0.40"
+version = "1.0.41"
 
 [tool.poetry.dependencies]
 boto3 = "^1.17.62"
