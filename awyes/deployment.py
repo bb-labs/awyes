@@ -18,6 +18,7 @@ class Deployment():
         'lambda': boto3.client('lambda'),
         'session': boto3.session.Session(),
         'docker': docker.client.from_env(),
+        'docker.images': docker.client.from_env().images,
     }
 
     def __init__(self, config_path, source_path, root_path='.'):
@@ -28,7 +29,7 @@ class Deployment():
         self.shared = defaultdict(dict)
 
         # Load the config and docker images
-        with open(normpath(join(self.root_path, self.config_path, 'config.yml'))) as config:
+        with open(normpath(join(self.root_path, self.config_path, 'awyes.yml'))) as config:
             self.config = yaml.safe_load(config)
 
         # Login to docker
@@ -61,7 +62,7 @@ class Deployment():
 
     def deploy(self):
         # Unpack action metadata
-        unpack = itemgetter('depends_on', 'output', 'args')
+        unpack = itemgetter('depends_on', 'output', 'args', 'client')
 
         # Loop over each client
         for client_name, resources in self.config.items():
@@ -75,7 +76,7 @@ class Deployment():
                     metadata.setdefault('output', False)
                     metadata.setdefault('depends_on', [])
 
-                    depends_on, output, args = unpack(metadata)
-                    action = getattr(client, action_name)
+                    # depends_on, output, args, client = unpack(metadata)
+                    # action = getattr(client, action_name)
                     
                     print(action_name)
