@@ -13,15 +13,8 @@ def deploy_lambdas(self):
 
             lmbda = self.__class__.lambda_client.create_function(
                 FunctionName=lambda_config['name'],
-                Handler=lambda_config['handler'],
-                Runtime=lambda_config['runtime'],
-                Layers=[
-                    layer['LayerVersionArn']
-                    for layer in map(lambda name: self.shared['layers'][name], lambda_config['layers'])
-                ],
-                Role=self.shared['roles'][lambda_config['role']]['Arn'],
                 Code={
-                    'ZipFile': open(f"./source/{lambda_config['source']}.zip", 'rb').read()
+                    'ImageUri': self.shared['ecr'][lambda_config['image']]
                 }
             )
 

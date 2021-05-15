@@ -1,4 +1,4 @@
-import json
+import yaml
 import boto3
 import docker
 
@@ -10,13 +10,15 @@ from collections import defaultdict
 
 
 class Deployment():
-    session = boto3.session.Session()
-    ecr_client = boto3.client('ecr')
-    sts_client = boto3.client('sts')
-    iam_client = boto3.client('iam')
-    event_client = boto3.client('events')
-    lambda_client = boto3.client('lambda')
-    docker_client = docker.client.from_env()
+    clients = {
+        'ecr': boto3.client('ecr'),
+        'sts': boto3.client('sts'),
+        'iam': boto3.client('iam'),
+        'events': boto3.client('events'),
+        'lambda': boto3.client('lambda'),
+        'session': boto3.session.Session(),
+        'docker': docker.client.from_env(),
+    }
 
     def __init__(self, config_path, source_path, root_path='.'):
         # Initialize paths and shared dictionary
@@ -26,35 +28,29 @@ class Deployment():
         self.shared = defaultdict(dict)
 
         # Load the config and docker images
-        with open(normpath(join(self.root_path, self.config_path, 'config.json'))) as config:
-            self.config = json.load(config)
+        with open(normpath(join(self.root_path, self.config_path, 'config.yml'))) as config:
+            self.config = yaml.safe_load(config)
 
         # Login to docker
-        Deployment.docker_client.login(
+        Deployment.clients['docker'].login(
             username="AWS",
             password=self.ecr_password,
             registry=f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
         )
 
-    from .role import deploy_roles
-    from .event import deploy_events
-    from .layer import deploy_layers
-    from .image import deploy_images
-    from .function import deploy_lambdas
-
     @property
     def region(self):
-        return Deployment.session.region_name
+        return Deployment.clients['session'].region_name
 
     @property
     def account_id(self):
-        id_response = Deployment.sts_client.get_caller_identity()
+        id_response = Deployment.clients['sts'].get_caller_identity()
 
-        return itemgetter('Account')(id_response)
+        return id_response['Account']
 
     @property
     def ecr_password(self):
-        token_response = Deployment.ecr_client.get_authorization_token()
+        token_response = Deployment.clients['ecr'].get_authorization_token()
 
         get_data = itemgetter('authorizationData')
         get_token = itemgetter('authorizationToken')
@@ -64,8 +60,22 @@ class Deployment():
         return sub("AWS:", "", b64decode(token).decode())
 
     def deploy(self):
-        self.deploy_images()
-        # self.deploy_roles()
-        # self.deploy_events()
-        # self.deploy_layers()
-        # self.deploy_lambdas()
+        # Unpack action metadata
+        unpack = itemgetter('depends_on', 'output', 'args')
+
+        # Loop over each client
+        for client_name, resources in self.config.items():
+            client = vars(Deployment)['clients'][client_name]
+
+            # Loop over each resource
+            for resource_name, steps in resources.items():
+
+                # Loop over each step
+                for action_name, metadata in steps.items():
+                    metadata.setdefault('output', False)
+                    metadata.setdefault('depends_on', [])
+
+                    depends_on, output, args = unpack(metadata)
+                    action = getattr(client, action_name)
+                    
+                    print(action_name)
