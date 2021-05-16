@@ -1,4 +1,3 @@
-from itertools import chain
 from functools import reduce
 
 
@@ -6,14 +5,18 @@ def sanitize_key(key):
     return int(key) if key.isnumeric() else key
 
 
-def access(value, accessor):
-    keys = filter(None, chain.from_iterable(map(
-        lambda dotstring: dotstring.split('.'),
-        accessor.split(':')
-    )))
+def access(context, accessor):
+    keys = accessor if isinstance(accessor, list) \
+        else filter(None, accessor.split('.'))
 
-    return reduce(lambda result, key: result[sanitize_key(key)], keys, value)
+    return reduce(
+        lambda result, key: result[sanitize_key(key)],
+        keys,
+        context
+    )
 
 
-def topological_sort(deployment):
-    pass
+def insert(context, accessor, value):
+    *target, final = accessor.split('.')
+
+    access(context, target)[sanitize_key(final)] = value

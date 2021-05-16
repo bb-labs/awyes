@@ -1,15 +1,14 @@
-import sys
 import boto3
 import docker
 
-from re import sub
+from sys import argv
+from pprint import pprint
+from re import sub, search
 from yaml import safe_load
 from base64 import b64decode
 from operator import itemgetter
+from utils import access, insert
 from os.path import normpath, join
-from collections import defaultdict
-
-from utils import access
 
 
 class Deployment():
@@ -26,11 +25,11 @@ class Deployment():
     def __init__(self, root='.'):
         # Initialize paths and shared dictionary
         self.root = root
-        self.shared = defaultdict(dict)
 
         # Load the config and docker images
         with open(normpath(join(self.root, 'awyes.yml'))) as config:
             self.config = safe_load(config)
+            self.config.update(Deployment.clients)
 
         # Login to docker
         Deployment.clients['docker'].login(
@@ -38,9 +37,6 @@ class Deployment():
             password=self.ecr_password,
             registry=f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
         )
-
-        # Deployment order
-        self.actions = self.order()
 
     @property
     def region(self):
@@ -63,47 +59,82 @@ class Deployment():
 
         return sub("AWS:", "", b64decode(token).decode())
 
-    def topological_traverse(self, node, seen=set(), result=[]):
-        if node in seen:
+    def topological_traverse(self, node_name, seen=set(), result=[]):
+        if node_name in seen:
             return result
 
-        seen.add(node)
+        seen.add(node_name)
 
-        for other_node in access(self.config, node).get('depends_on', []):
-            self.topological_traverse(other_node, seen, result)
+        for other_node_name in access(self.config, node_name).get('depends_on', []):
+            self.topological_traverse(other_node_name, seen, result)
 
-        result.insert(0, access(self.config, node))
+        # Associate the action name with the node_name
+        action = access(self.config, node_name)
+        action_name, resource_name = node_name.split('.')
+        action['action'] = action_name
+        action['resource'] = resource_name
+
+        result.append(action)
 
         return result
 
-    def order(self):
+    def topological_ordering(self):
         seen = set()
         sorted_nodes = []
 
-        # Loop over each client
-        for resource, steps in self.config.items():
-            # Loop over each step
-            for action, metadata in steps.items():
-                metadata.setdefault('output', False)
+        # Loop over each resource
+        for resource_name, actions in self.config.items():
+            # Loop over each action
+            for action_name, metadata in actions.items():
                 metadata.setdefault('depends_on', [])
 
                 # Mutates sorted_nodes
                 self.topological_traverse(
-                    node=f"{resource}.{action}",
+                    node_name=f"{resource_name}.{action_name}",
                     seen=seen,
                     result=sorted_nodes
                 )
 
         return sorted_nodes
 
+    def shared_lookup(self, args):
+        if isinstance(args, dict):
+            for key, value in args.items():
+                args[key] = self.shared_lookup(value)
+
+            return args
+
+        if isinstance(args, list):
+            return list(map(lambda value: self.shared_lookup(value), args))
+
+        if isinstance(args, str):
+            match = search('\((?P<reference>.*)\)', args)
+
+            if not match:
+                return args
+
+            return access(self.config, match.group('reference'))
+
+        return args
+
     def deploy(self):
         # Unpack action metadata
-        unpack = itemgetter('depends_on', 'output', 'args', 'client')
+        unpack = itemgetter('args', 'client', 'action', 'resource')
 
-        pass
+        for step in self.topological_ordering():
+            args, client_name, action_name, resource_name = unpack(step)
+
+            client = access(self.config, client_name)
+            action = getattr(client, action_name)
+
+            insert(
+                context=self.config,
+                accessor=f"{resource_name}.{action_name}",
+                value=action(**args)
+            )
 
 
 if __name__ == '__main__':
-    _, root = sys.argv
+    _, root = argv
 
     Deployment(root=root).deploy()
