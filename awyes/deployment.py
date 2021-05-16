@@ -1,11 +1,13 @@
-import yaml
+import sys
 import boto3
 import docker
 
 from re import sub
+from yaml import safe_load
 from base64 import b64decode
 from operator import itemgetter
 from os.path import normpath, join
+from utils import topological_sort
 from collections import defaultdict
 
 
@@ -21,16 +23,14 @@ class Deployment():
         'docker.images': docker.client.from_env().images,
     }
 
-    def __init__(self, config_path, source_path, root_path='.'):
+    def __init__(self, root='.'):
         # Initialize paths and shared dictionary
-        self.root_path = root_path
-        self.config_path = config_path
-        self.source_path = source_path
+        self.root = root
         self.shared = defaultdict(dict)
 
         # Load the config and docker images
-        with open(normpath(join(self.root_path, self.config_path, 'awyes.yml'))) as config:
-            self.config = yaml.safe_load(config)
+        with open(normpath(join(self.root, 'awyes.yml'))) as config:
+            self.config = safe_load(config)
 
         # Login to docker
         Deployment.clients['docker'].login(
@@ -78,5 +78,11 @@ class Deployment():
 
                     # depends_on, output, args, client = unpack(metadata)
                     # action = getattr(client, action_name)
-                    
+
                     print(action_name)
+
+
+if __name__ == '__main__':
+    _, root = sys.argv
+
+    Deployment(root=root).deploy()

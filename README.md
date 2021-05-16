@@ -1,21 +1,16 @@
-# awyes docker action
+# awyes action
 
-This action prints deploys lambdas with ease. Simple aws.json file does the trick! 
+This action deploys any boto3 resource with ease. A simple awyes.yml does the trick! 
 
 ## Inputs
 
-### `config`
+### `root`
 
-The directory containing your aws.json. Defaults to `/aws`.
-
-### `src`
-
-The directory containing your source. Defaults to `/src`.
+The directory containing your awyes.yml. Defaults to `.`.
 
 
 ## Example usage
 
 uses: actions/awyes@v1
 with:
-  config: '/aws'
-  src: '/src'
+  root: '/project'

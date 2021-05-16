@@ -1,20 +1,19 @@
-import requests
-from hashlib import md5
+from itertools import chain
+from functools import reduce
 
 
-def hash_file(path):
-    with open(path, 'rb') as fd:
-        m = md5()
-        m.update(fd.read())
-
-    return m.digest()
+def sanitize_key(key):
+    return int(key) if key.isnumeric() else key
 
 
-def hash_url(url):
-    response = requests.get(url, stream=True)
+def access(value, accessor):
+    keys = filter(None, chain.from_iterable(map(
+        lambda dotstring: dotstring.split('.'),
+        accessor.split(':')
+    )))
 
-    with open('temp.zip', 'wb') as fd:
-        for chunk in response.iter_content(chunk_size=1024):
-            fd.write(chunk)
+    return reduce(lambda result, key: result[sanitize_key(key)], keys, value)
 
-    return hash_file('temp.zip')
+
+def topological_sort(deployment):
+    pass
