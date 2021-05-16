@@ -7,8 +7,9 @@ from yaml import safe_load
 from base64 import b64decode
 from operator import itemgetter
 from os.path import normpath, join
-from utils import topological_sort
 from collections import defaultdict
+
+from utils import access
 
 
 class Deployment():
@@ -20,7 +21,6 @@ class Deployment():
         'lambda': boto3.client('lambda'),
         'session': boto3.session.Session(),
         'docker': docker.client.from_env(),
-        'docker.images': docker.client.from_env().images,
     }
 
     def __init__(self, root='.'):
@@ -38,6 +38,9 @@ class Deployment():
             password=self.ecr_password,
             registry=f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
         )
+
+        # Deployment order
+        self.actions = self.order()
 
     @property
     def region(self):
@@ -60,26 +63,44 @@ class Deployment():
 
         return sub("AWS:", "", b64decode(token).decode())
 
+    def topological_traverse(self, node, seen=set(), result=[]):
+        if node in seen:
+            return result
+
+        seen.add(node)
+
+        for other_node in access(self.config, node).get('depends_on', []):
+            self.topological_traverse(other_node, seen, result)
+
+        result.insert(0, access(self.config, node))
+
+        return result
+
+    def order(self):
+        seen = set()
+        sorted_nodes = []
+
+        # Loop over each client
+        for resource, steps in self.config.items():
+            # Loop over each step
+            for action, metadata in steps.items():
+                metadata.setdefault('output', False)
+                metadata.setdefault('depends_on', [])
+
+                # Mutates sorted_nodes
+                self.topological_traverse(
+                    node=f"{resource}.{action}",
+                    seen=seen,
+                    result=sorted_nodes
+                )
+
+        return sorted_nodes
+
     def deploy(self):
         # Unpack action metadata
         unpack = itemgetter('depends_on', 'output', 'args', 'client')
 
-        # Loop over each client
-        for client_name, resources in self.config.items():
-            client = vars(Deployment)['clients'][client_name]
-
-            # Loop over each resource
-            for resource_name, steps in resources.items():
-
-                # Loop over each step
-                for action_name, metadata in steps.items():
-                    metadata.setdefault('output', False)
-                    metadata.setdefault('depends_on', [])
-
-                    # depends_on, output, args, client = unpack(metadata)
-                    # action = getattr(client, action_name)
-
-                    print(action_name)
+        pass
 
 
 if __name__ == '__main__':
