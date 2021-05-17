@@ -5,12 +5,19 @@ def sanitize_key(key):
     return int(key) if key.isnumeric() else key
 
 
+def subscript(context, key):
+    try:
+        return context[sanitize_key(key)]
+    except:
+        return getattr(context, sanitize_key(key))
+
+
 def access(context, accessor):
-    keys = accessor if isinstance(accessor, list) \
-        else filter(None, accessor.split('.'))
+    a = accessor
+    keys = a if isinstance(a, list) else filter(None, a.split('.'))
 
     return reduce(
-        lambda result, key: result[sanitize_key(key)],
+        lambda result, key: subscript(result, key),
         keys,
         context
     )

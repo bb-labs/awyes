@@ -3,11 +3,11 @@ import docker
 
 from sys import argv
 from pprint import pprint
-from re import sub, search
 from yaml import safe_load
 from base64 import b64decode
 from operator import itemgetter
 from utils import access, insert
+from re import sub, search, escape
 from os.path import normpath, join
 
 
@@ -31,25 +31,16 @@ class Deployment():
             self.config = safe_load(config)
             self.config.update(Deployment.clients)
 
-        # Login to docker
-        Deployment.clients['docker'].login(
-            username="AWS",
-            password=self.ecr_password,
-            registry=f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
-        )
 
-    @property
-    def region(self):
+    def get_region(self):
         return Deployment.clients['session'].region_name
 
-    @property
-    def account_id(self):
+    def get_account_id(self):
         id_response = Deployment.clients['sts'].get_caller_identity()
 
         return id_response['Account']
 
-    @property
-    def ecr_password(self):
+    def get_ecr_password(self):
         token_response = Deployment.clients['ecr'].get_authorization_token()
 
         get_data = itemgetter('authorizationData')
@@ -70,7 +61,7 @@ class Deployment():
 
         # Associate the action name with the node_name
         action = access(self.config, node_name)
-        action_name, resource_name = node_name.split('.')
+        resource_name, action_name = node_name.split('.')
         action['action'] = action_name
         action['resource'] = resource_name
 
@@ -84,6 +75,10 @@ class Deployment():
 
         # Loop over each resource
         for resource_name, actions in self.config.items():
+            # Skip the clients
+            if not getattr(actions, 'items', None):
+                continue
+
             # Loop over each action
             for action_name, metadata in actions.items():
                 metadata.setdefault('depends_on', [])
@@ -108,12 +103,17 @@ class Deployment():
             return list(map(lambda value: self.shared_lookup(value), args))
 
         if isinstance(args, str):
-            match = search('\((?P<reference>.*)\)', args)
+            match = search('\$\((?P<reference>.*)\)', args)
 
             if not match:
                 return args
 
-            return access(self.config, match.group('reference'))
+            value = access(self.config, match.group('reference'))
+
+            if isinstance(value, str):
+                return sub(escape(match.group()), value, args)
+
+            return value
 
         return args
 
@@ -127,14 +127,27 @@ class Deployment():
             client = access(self.config, client_name)
             action = getattr(client, action_name)
 
+            print(
+                'Deploying -------------------------------',
+                action_name,
+                ' for ',
+                resource_name
+            )
+
+            try:
+                value = action(**self.shared_lookup(args))
+            except Exception as e:
+                value = e
+
             insert(
                 context=self.config,
                 accessor=f"{resource_name}.{action_name}",
-                value=action(**args)
+                value=value
             )
 
 
 if __name__ == '__main__':
     _, root = argv
 
-    Deployment(root=root).deploy()
+    d = Deployment(root=root)
+    d.deploy()
