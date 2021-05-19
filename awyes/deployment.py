@@ -19,7 +19,7 @@ class Deployment():
         'events': boto3.client('events'),
         'lambda': boto3.client('lambda'),
         'session': boto3.session.Session(),
-        'docker': docker.client.from_env(),
+        'docker': docker.APIClient(base_url='unix://var/run/docker.sock'),
     }
 
     def __init__(self, root='.'):
@@ -31,6 +31,12 @@ class Deployment():
             self.config = safe_load(config)
             self.config.update(Deployment.clients)
 
+        # Login to docker
+        Deployment.clients['docker'].login(
+            username="AWS",
+            password=self.get_ecr_password(),
+            registry=f"{self.get_account_id()}.dkr.ecr.{self.get_region()}.amazonaws.com"
+        )
 
     def get_region(self):
         return Deployment.clients['session'].region_name
