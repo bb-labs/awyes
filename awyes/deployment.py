@@ -19,34 +19,11 @@ class Deployment():
         'events': boto3.client('events'),
         'lambda': boto3.client('lambda'),
         'session': boto3.session.Session(),
-        'docker': docker.APIClient(base_url='unix://var/run/docker.sock'),
+        'docker': docker.client.from_env(),
     }
 
-    def __init__(self, root='.'):
-        # Initialize paths and shared dictionary
-        self.root = root
-
-        # Load the config and docker images
-        with open(normpath(join(self.root, 'awyes.yml'))) as config:
-            self.config = safe_load(config)
-            self.config.update(Deployment.clients)
-
-        # Login to docker
-        Deployment.clients['docker'].login(
-            username="AWS",
-            password=self.get_ecr_password(),
-            registry=f"{self.get_account_id()}.dkr.ecr.{self.get_region()}.amazonaws.com"
-        )
-
-    def get_region(self):
-        return Deployment.clients['session'].region_name
-
-    def get_account_id(self):
-        id_response = Deployment.clients['sts'].get_caller_identity()
-
-        return id_response['Account']
-
-    def get_ecr_password(self):
+    @staticmethod
+    def get_ecr_password():
         token_response = Deployment.clients['ecr'].get_authorization_token()
 
         get_data = itemgetter('authorizationData')
@@ -55,6 +32,28 @@ class Deployment():
         token = get_token(get_data(token_response).pop())
 
         return sub("AWS:", "", b64decode(token).decode())
+
+    @staticmethod
+    def get_region():
+        return Deployment.clients['session'].region_name
+
+    @staticmethod
+    def get_account_id():
+        id_response = Deployment.clients['sts'].get_caller_identity()
+
+        return id_response['Account']
+
+    def __init__(self, root='.'):
+        # Initialize paths and shared dictionary
+        self.root = root
+
+        # Load the config and docker images
+        with open(normpath(join(self.root, 'awyes.yml'))) as config:
+            self.config = safe_load(config)
+            self.config.update({
+                **Deployment.clients,
+                'deployment': Deployment
+            })
 
     def topological_traverse(self, node_name, seen=set(), result=[]):
         if node_name in seen:
@@ -87,6 +86,7 @@ class Deployment():
 
             # Loop over each action
             for action_name, metadata in actions.items():
+                metadata.setdefault('args', {})
                 metadata.setdefault('depends_on', [])
 
                 # Mutates sorted_nodes
