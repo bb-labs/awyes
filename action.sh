@@ -1,4 +1,4 @@
-#!/bin/bash
-ls -laR /
-# cd /code
-# poetry run deploy "$@"
+#!/bin/sh
+
+cd /code
+poetry run deploy "$@"

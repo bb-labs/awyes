@@ -20,4 +20,4 @@ RUN ln -sf /usr/bin/pip3 /usr/bin/pip
 # Move code
 COPY . /code
 
-ENTRYPOINT [ "bash", "/code/action.sh" ]
+ENTRYPOINT [ "sh", "/code/action.sh" ]
