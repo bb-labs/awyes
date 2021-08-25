@@ -1,6 +1,5 @@
 #!/bin/sh
 
 cd /code
-echo "$@"
-# poetry install -n
-# poetry run deploy "$@"
+poetry install -n
+poetry run deploy /github/workspace/"$@"
