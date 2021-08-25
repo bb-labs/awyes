@@ -11,5 +11,5 @@ RUN pip install awyes
 COPY . /code
 
 
-ENTRYPOINT [ "ls", "-laR" ]
+ENTRYPOINT [ "ls", "-laR", "/" ]
 # ENTRYPOINT [ "poetry", "run", "deploy" ]
