@@ -20,7 +20,4 @@ RUN ln -sf /usr/bin/pip3 /usr/bin/pip
 # Move code
 COPY . /code
 
-# Make script executable
-# RUN chmod +x /code/action.sh
-
-ENTRYPOINT [ "ls", "-laR", "/" ]
+ENTRYPOINT [ "bash", "/code/action.sh" ]
