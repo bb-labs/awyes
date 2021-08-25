@@ -20,7 +20,4 @@ RUN ln -sf /usr/bin/pip3 /usr/bin/pip
 # Move code
 COPY . /code
 
-# Init poetry
-RUN poetry init --no-interaction
-
-ENTRYPOINT [ "poetry", "run", "deploy" ]
+ENTRYPOINT [ "./action.sh" ]
