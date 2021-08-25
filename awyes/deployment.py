@@ -2,14 +2,13 @@ import boto3
 import docker
 
 from sys import argv
-from pprint import pprint
 from yaml import safe_load
 from base64 import b64decode
 from operator import itemgetter
-from utils import access, insert
 from re import sub, search, escape
 from os.path import normpath, join
 
+from .utils import access, insert
 
 class Deployment():
     clients = {
@@ -151,9 +150,10 @@ class Deployment():
                 value=value
             )
 
+def deploy():
+    print('hey daddy')
+    # _, root = argv
 
-if __name__ == '__main__':
-    _, root = argv
+    # d = Deployment(root=root)
+    # d.deploy()
 
-    d = Deployment(root=root)
-    d.deploy()
