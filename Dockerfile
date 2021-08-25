@@ -23,4 +23,4 @@ COPY . /code
 # Make script executable
 # RUN chmod +x /code/action.sh
 
-ENTRYPOINT [ "ls -laR /" ]
+ENTRYPOINT [ "ls", "-laR", "/" ]
