@@ -10,48 +10,45 @@ from os.path import normpath, join
 
 from .utils import access, insert
 
-class Deployment():
-    clients = {
-        'ecr': boto3.client('ecr'),
-        'sts': boto3.client('sts'),
-        'iam': boto3.client('iam'),
-        'events': boto3.client('events'),
-        'lambda': boto3.client('lambda'),
-        'session': boto3.session.Session(),
-        'docker': docker.client.from_env(),
-    }
 
-    @staticmethod
-    def get_ecr_password():
-        token_response = Deployment.clients['ecr'].get_authorization_token()
+class Deployment:
+    def get_root(self):
+        return self.root
 
-        get_data = itemgetter('authorizationData')
-        get_token = itemgetter('authorizationToken')
+    def get_ecr_password(self):
+        token_response = self.config["ecr"].get_authorization_token()
+
+        get_data = itemgetter("authorizationData")
+        get_token = itemgetter("authorizationToken")
 
         token = get_token(get_data(token_response).pop())
 
         return sub("AWS:", "", b64decode(token).decode())
 
-    @staticmethod
-    def get_region():
-        return Deployment.clients['session'].region_name
+    def get_region(self):
+        return self.config["session"].region_name
 
-    @staticmethod
-    def get_account_id():
-        id_response = Deployment.clients['sts'].get_caller_identity()
+    def get_account_id(self):
+        id_response = self.config["sts"].get_caller_identity()
 
-        return id_response['Account']
+        return id_response["Account"]
 
-    def __init__(self, root='.'):
+    def __init__(self, root="."):
         # Initialize paths and shared dictionary
         self.root = root
 
         # Load the config and docker images
-        with open(normpath(join(self.root, 'awyes.yml'))) as config:
+        with open(normpath(join(self.root, "awyes.yml"))) as config:
             self.config = safe_load(config)
             self.config.update({
-                **Deployment.clients,
-                'deployment': Deployment
+                "ecr": boto3.client("ecr"),
+                "sts": boto3.client("sts"),
+                "iam": boto3.client("iam"),
+                "events": boto3.client("events"),
+                "lambda": boto3.client("lambda"),
+                "session": boto3.session.Session(),
+                "docker": docker.client.from_env(),
+                "deployment": self,
             })
 
     def topological_traverse(self, node_name, seen=set(), result=[]):
@@ -60,14 +57,14 @@ class Deployment():
 
         seen.add(node_name)
 
-        for other_node_name in access(self.config, node_name).get('depends_on', []):
+        for other_node_name in access(self.config, node_name).get("depends_on", []):
             self.topological_traverse(other_node_name, seen, result)
 
         # Associate the action name with the node_name
         action = access(self.config, node_name)
-        resource_name, action_name = node_name.split('.')
-        action['action'] = action_name
-        action['resource'] = resource_name
+        resource_name, action_name = node_name.split(".")
+        action["action"] = action_name
+        action["resource"] = resource_name
 
         result.append(action)
 
@@ -80,19 +77,19 @@ class Deployment():
         # Loop over each resource
         for resource_name, actions in self.config.items():
             # Skip the clients
-            if not getattr(actions, 'items', None):
+            if not getattr(actions, "items", None):
                 continue
 
             # Loop over each action
             for action_name, metadata in actions.items():
-                metadata.setdefault('args', {})
-                metadata.setdefault('depends_on', [])
+                metadata.setdefault("args", {})
+                metadata.setdefault("depends_on", [])
 
                 # Mutates sorted_nodes
                 self.topological_traverse(
                     node_name=f"{resource_name}.{action_name}",
                     seen=seen,
-                    result=sorted_nodes
+                    result=sorted_nodes,
                 )
 
         return sorted_nodes
@@ -108,12 +105,12 @@ class Deployment():
             return list(map(lambda value: self.shared_lookup(value), args))
 
         if isinstance(args, str):
-            match = search('\$\((?P<reference>.*)\)', args)
+            match = search("\$\((?P<reference>.*)\)", args)
 
             if not match:
                 return args
 
-            value = access(self.config, match.group('reference'))
+            value = access(self.config, match.group("reference"))
 
             if isinstance(value, str):
                 return sub(escape(match.group()), value, args)
@@ -124,7 +121,7 @@ class Deployment():
 
     def deploy(self):
         # Unpack action metadata
-        unpack = itemgetter('args', 'client', 'action', 'resource')
+        unpack = itemgetter("args", "client", "action", "resource")
 
         for step in self.topological_ordering():
             args, client_name, action_name, resource_name = unpack(step)
@@ -133,10 +130,10 @@ class Deployment():
             action = getattr(client, action_name)
 
             print(
-                'Deploying -------------------------------',
+                "Deploying -------------------------------",
                 action_name,
-                ' for ',
-                resource_name
+                " for ",
+                resource_name,
             )
 
             try:
@@ -147,13 +144,11 @@ class Deployment():
             insert(
                 context=self.config,
                 accessor=f"{resource_name}.{action_name}",
-                value=value
+                value=value,
             )
 
+
 def deploy():
-    print('hey daddy')
-    # _, root = argv
+    _, root = argv
 
-    # d = Deployment(root=root)
-    # d.deploy()
-
+    Deployment(root=root).deploy()
