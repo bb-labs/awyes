@@ -2,7 +2,7 @@
 type = patch
 
 publish:
-	poetry config http-basic.pypi trumanpurnell Smores44!
+	poetry config http-basic.pypi trumanpurnell $(POETRY_PASSWORD)
 	poetry version $(type)
 	poetry build
 	poetry publish

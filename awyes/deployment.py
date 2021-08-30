@@ -1,3 +1,4 @@
+import os
 import boto3
 import docker
 
@@ -36,11 +37,12 @@ class Deployment:
     def __init__(self, root="."):
         # Initialize paths and shared dictionary
         self.root = root
-
+        
         # Load the config and docker images
         with open(normpath(join(self.root, "awyes.yml"))) as config:
             self.config = safe_load(config)
             self.config.update({
+                "os": os,
                 "ecr": boto3.client("ecr"),
                 "sts": boto3.client("sts"),
                 "iam": boto3.client("iam"),
@@ -50,6 +52,8 @@ class Deployment:
                 "docker": docker.client.from_env(),
                 "deployment": self,
             })
+        
+        print(access(self.config, 'os.environ'))
 
     def topological_traverse(self, node_name, seen=set(), result=[]):
         if node_name in seen:
