@@ -52,8 +52,6 @@ class Deployment:
                 "docker": docker.client.from_env(),
                 "deployment": self,
             })
-        
-        print(access(self.config, 'os.environ'))
 
     def topological_traverse(self, node_name, seen=set(), result=[]):
         if node_name in seen:
