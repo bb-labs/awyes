@@ -1,23 +1,8 @@
-FROM alpine
+FROM python:3.9
 
-# Install and link python3
-RUN apk add --update --no-cache \
-  python3 \
-  py3-pip \
-  libressl-dev \
-  musl-dev \
-  libffi-dev \
-  openssl-dev \
-  py-cryptography
+WORKDIR /code
+RUN pip3 install pipenv
 
-# Install poetry to run awyes
-RUN pip3 install poetry
-
-# Symlink to python3
-RUN ln -sf /usr/bin/python3 /usr/bin/python
-RUN ln -sf /usr/bin/pip3 /usr/bin/pip
-
-# Move code
-COPY . /code
-
-ENTRYPOINT [ "sh", "/code/action.sh" ]
+COPY . .
+RUN pipenv install --deploy
+ENTRYPOINT [ "pipenv", "run", "python", "-m", "awyes.deployment" ]

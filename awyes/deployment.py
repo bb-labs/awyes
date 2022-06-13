@@ -37,7 +37,7 @@ class Deployment:
     def __init__(self, root="."):
         # Initialize paths and shared dictionary
         self.root = root
-        
+
         # Load the config and docker images
         with open(normpath(join(self.root, "awyes.yml"))) as config:
             self.config = safe_load(config)
@@ -150,7 +150,7 @@ class Deployment:
             )
 
 
-def deploy():
+if __name__ == '__main__':
     _, root = argv
 
     Deployment(root=root).deploy()
