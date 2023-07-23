@@ -2,7 +2,7 @@
 name: "awyes"
 description: "Deploy code easily to aws"
 inputs:
-  root:
+  path:
     description: "Path to your root project directory"
     required: false
     default: "."
