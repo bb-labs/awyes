@@ -4,7 +4,7 @@ This action deploys any boto3 resource with ease. A simple awyes.yml does the tr
 
 ## Inputs
 
-### `root`
+### `path`
 
 The directory containing your awyes.yml. Defaults to `.`.
 
@@ -13,4 +13,4 @@ The directory containing your awyes.yml. Defaults to `.`.
 
 uses: actions/awyes@v1
 with:
-  root: '/project'
+  path: '/project'
