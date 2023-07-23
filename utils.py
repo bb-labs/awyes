@@ -8,11 +8,11 @@ def sanitize_key(key):
 def subscript(context, key):
     try:
         return context[sanitize_key(key)]
-    except:
+    except Exception:
         return getattr(context, sanitize_key(key))
 
 
-def access(context, accessor):
+def rgetattr(context, accessor):
     a = accessor
     keys = a if isinstance(a, list) else filter(None, a.split('.'))
 
@@ -23,7 +23,7 @@ def access(context, accessor):
     )
 
 
-def insert(context, accessor, value):
+def rsetattr(context, accessor, value):
     *target, final = accessor.split('.')
 
-    access(context, target)[sanitize_key(final)] = value
+    rgetattr(context, target)[sanitize_key(final)] = value

@@ -1,15 +1,13 @@
 [[source]]
+name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-name = "pypi"
 
 [packages]
 boto3 = "*"
-requests = "*"
 docker = "*"
 pyyaml = "*"
+requests = "*"
 
-[dev-packages]
-
-[requires]
-python_version = "3.9"
+[scripts]
+test = "pipenv run python deployment_test.py"

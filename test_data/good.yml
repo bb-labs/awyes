@@ -1,0 +1,11 @@
+some_namespace:
+  some_action:
+    client: some_client
+    depends_on:
+      - some_namespace.some_other_action
+    args:
+      an: argument
+  some_other_action:
+    client: some_other_client
+    args:
+      another: argument
