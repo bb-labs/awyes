@@ -11,3 +11,5 @@ requests = "*"
 
 [scripts]
 test = "pipenv run python deployment_test.py"
+version = "python setup.py sdist bdist_wheel"
+upload = "twine upload --verbose --skip-existing dist/*"

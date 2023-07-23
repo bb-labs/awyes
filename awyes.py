@@ -11,9 +11,10 @@ from utils import rgetattr, rsetattr
 
 
 class Deployment:
-    def __init__(self, path=""):
+    def __init__(self, path="", verbose=False):
         # Initialize paths and shared dictionary
         self.path = path if path else "./awyes.yml"
+        self.verbose = verbose
 
         # Load the config and docker images
         with open(normpath(self.path)) as config:
@@ -83,15 +84,18 @@ class Deployment:
 
     def deploy(self):
         for node in self.get_topologically_sorted_nodes():
-            resource_name, action_name = getattr(client, "name").split(".")
+            name = getattr(node, "name")
             args = getattr(node, "args")
             client = getattr(node, "client")
-            action = getattr(client, action_name)
 
-            print(f"{action_name}.{resource_name}")
+            resource_name, action_name = name.split(".")
 
             try:
+                action = getattr(client, action_name)
                 value = action(**self.shared_lookup(args))
+
+                if self.verbose:
+                    print(f"setting value {value} for {name}")
 
                 rsetattr(
                     context=self.config,
