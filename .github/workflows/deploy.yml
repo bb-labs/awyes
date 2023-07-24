@@ -32,7 +32,7 @@ jobs:
         run: |
           # Replace the versioning logic with your own versioning scheme
           current_version=$(head -n 1 VERSION)
-          new_version=$(pipenv run python -c "import semver; print(semver.bump_patch('$current_version'))")
+          new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
           sed -i "s/__version__ = '$current_version'/__version__ = '$new_version'/" VERSION
           git config user.name "trumanpurnell"
           git config user.email "truman.purnell@gmail.com"
