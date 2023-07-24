@@ -27,7 +27,7 @@ jobs:
           python -m pip install setuptools wheel pipenv twine semver
           pipenv install --system
 
-      # Bump version and create a new tag
+      # Bump version, create a new tag, and push it
       - name: Bump version and create tag
         run: |
           current_version=$(head -n 1 VERSION)
@@ -35,18 +35,13 @@ jobs:
 
           echo "Bumping version from $current_version to $new_version"
           echo "$new_version" > VERSION
-          cat VERSION
 
           git config user.name "trumanpurnell"
           git config user.email "truman.purnell@gmail.com"
-          git commit -am "Bump version to $new_version"
+          git add -A
+          git commit -m "Bump version to $new_version"
           git tag $new_version
-
-      # Push the new tag to the repository
-      - name: Push new tag
-        if: github.ref == 'refs/heads/main'
-        run: |
-          git push origin --follow-tags
+          git push origin $new_version
 
       # Publish the package to PyPI (optional)
       - name: Publish to PyPI
