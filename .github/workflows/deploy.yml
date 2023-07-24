@@ -30,14 +30,14 @@ jobs:
       # Bump version and create a new tag
       - name: Bump version and create tag
         run: |
-          # Replace the versioning logic with your own versioning scheme
-          current_version=$(head -n 1 VERSION)
-          new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
-          sed -i "s/__version__ = '$current_version'/__version__ = '$new_version'/" VERSION
-          git config user.name "trumanpurnell"
-          git config user.email "truman.purnell@gmail.com"
-          git commit -am "Bump version to $new_version"
-          git tag $new_version
+          ls -la
+          # current_version=$(head -n 1 VERSION)
+          # new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
+          # sed -i "s/__version__ = '$current_version'/__version__ = '$new_version'/" VERSION
+          # git config user.name "trumanpurnell"
+          # git config user.email "truman.purnell@gmail.com"
+          # git commit -am "Bump version to $new_version"
+          # git tag $new_version
 
       # Push the new tag to the repository
       - name: Push new tag
