@@ -35,7 +35,10 @@ jobs:
 
           echo "Bumping version from $current_version to $new_version"
 
-          sed -i "s/__version__ = '$current_version'/__version__ = '$new_version'/" VERSION
+          sed -i "s/'$current_version'/'$new_version'/" VERSION
+
+          cat VERSION
+
           git config user.name "trumanpurnell"
           git config user.email "truman.purnell@gmail.com"
           git commit -am "Bump version to $new_version"
