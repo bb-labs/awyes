@@ -46,7 +46,7 @@ jobs:
       - name: Push new tag
         if: github.ref == 'refs/heads/main'
         run: |
-          git push origin $new_version
+          git push origin --follow-tags
 
       # Publish the package to PyPI (optional)
       - name: Publish to PyPI
