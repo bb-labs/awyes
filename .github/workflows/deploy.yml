@@ -1,0 +1,56 @@
+name: Python Package Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Tag and Deploy New Version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      # Install dependencies and package
+      - name: Install dependencies and package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools wheel pipenv twine
+          pipenv install --system
+
+      # Bump version and create a new tag
+      - name: Bump version and create tag
+        run: |
+          # Replace the versioning logic with your own versioning scheme
+          current_version=line=$(head -n 1 VERSION)
+          new_version=$(pipenv run python -c "import semver; print(semver.bump_patch('$current_version'))")
+          sed -i "s/__version__ = '$current_version'/__version__ = '$new_version'/" VERSION
+          git config user.name "trumanpurnell"
+          git config user.email "truman.purnell@gmail.com"
+          git commit -am "Bump version to $new_version"
+          git tag $new_version
+
+      # Push the new tag to the repository
+      - name: Push new tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git push origin $new_version
+
+      # Publish the package to PyPI (optional)
+      - name: Publish to PyPI
+        if: github.ref == 'refs/heads/main'
+        env:
+          TWINE_USERNAME: trumanpurnell
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          python setup.py sdist bdist_wheel
+          twine upload dist/*

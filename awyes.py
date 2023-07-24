@@ -106,7 +106,11 @@ class Deployment:
                 print("err: ", e)
 
 
-if __name__ == '__main__':
+def main():
     _, path = argv
 
     Deployment(path=path).deploy()
+
+
+if __name__ == '__main__':
+    main()

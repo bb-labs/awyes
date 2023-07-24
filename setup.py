@@ -1,17 +1,19 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
-    required_packages = f.read().splitlines()
-
 setup(
     name='awyes',
-    version='10.0.0',
     author='Truman Purnell',
     author_email='truman.purnell@gmail.com',
     description='A package for easy setup and management of resources on AWS',
     url='https://github.com/bb-labs/awyes',
     packages=find_packages(exclude=['tests', 'docs']),
-    install_requires=required_packages,
+    install_requires=[
+        'boto3',
+        'docker',
+        'pyyaml',
+        'semver',
+    ],
+    entry_points={'console_scripts': ['awyes=awyes:main']},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
