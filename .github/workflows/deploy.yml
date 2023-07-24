@@ -18,20 +18,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.9.0
 
       # Install dependencies and package
       - name: Install dependencies and package
         run: |
           python -m pip install --upgrade pip
-          python -m pip install setuptools wheel pipenv twine
+          python -m pip install setuptools wheel pipenv twine semver
           pipenv install --system
 
       # Bump version and create a new tag
       - name: Bump version and create tag
         run: |
           # Replace the versioning logic with your own versioning scheme
-          current_version=line=$(head -n 1 VERSION)
+          current_version=$(head -n 1 VERSION)
           new_version=$(pipenv run python -c "import semver; print(semver.bump_patch('$current_version'))")
           sed -i "s/__version__ = '$current_version'/__version__ = '$new_version'/" VERSION
           git config user.name "trumanpurnell"

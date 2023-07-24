@@ -11,7 +11,6 @@ setup(
         'boto3',
         'docker',
         'pyyaml',
-        'semver',
     ],
     entry_points={'console_scripts': ['awyes=awyes:main']},
     classifiers=[
