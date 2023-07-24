@@ -34,9 +34,7 @@ jobs:
           new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
 
           echo "Bumping version from $current_version to $new_version"
-
-          sed -i "s/'$current_version'/'$new_version'/" VERSION
-
+          echo "$new_version" > VERSION
           cat VERSION
 
           git config user.name "trumanpurnell"
