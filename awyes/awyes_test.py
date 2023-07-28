@@ -1,6 +1,6 @@
 import unittest
 import yaml
-from awyes import Deployment
+from .awyes import Deployment
 
 
 class DeploymentTestSuccess(unittest.TestCase):

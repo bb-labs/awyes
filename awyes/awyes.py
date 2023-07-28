@@ -7,7 +7,7 @@ import yaml
 from sys import argv
 from os.path import normpath
 
-from utils import rgetattr, rsetattr
+from .utils import rgetattr, rsetattr
 
 
 class Deployment:
