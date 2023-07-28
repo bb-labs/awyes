@@ -11,25 +11,34 @@ from .utils import rgetattr, rsetattr
 
 
 class Deployment:
-    def __init__(self, path="", verbose=False):
+    def __init__(self, paths=[], verbose=False):
         # Initialize paths and log settings
-        self.path = path
+        self.paths = paths
         self.verbose = verbose
 
         # Load the config and docker images
-        with open(normpath(self.path)) as config:
-            self.config = yaml.safe_load(config)
-            self.clients = {
-                "os": os,
-                "s3": boto3.client("s3"),
-                "ecr": boto3.client("ecr"),
-                "sts": boto3.client("sts"),
-                "iam": boto3.client("iam"),
-                "events": boto3.client("events"),
-                "lambda": boto3.client("lambda"),
-                "session": boto3.session.Session(),
-                "docker": docker.client.from_env(),
-            }
+        for path in self.paths:
+            try:
+                with open(normpath(path)) as config:
+                    self.config = yaml.safe_load(config)
+                    self.clients = {
+                        "os": os,
+                        "s3": boto3.client("s3"),
+                        "ecr": boto3.client("ecr"),
+                        "sts": boto3.client("sts"),
+                        "iam": boto3.client("iam"),
+                        "events": boto3.client("events"),
+                        "lambda": boto3.client("lambda"),
+                        "session": boto3.session.Session(),
+                        "docker": docker.client.from_env(),
+                    }
+
+                break  # success
+            except Exception as _:
+                pass
+
+        if not self.config:
+            raise "Could not resolve of awyes.yml config"
 
     def get_fully_qualified_node_names(self):
         return [f"{resource_name}.{action_name}"
@@ -108,7 +117,7 @@ class Deployment:
 
 def main():
     _, *path = argv
-    path = path[0] if path else "./awyes"
+    path = path[0] if path else ["./awyes.yml", "./awyes.yaml", "./awyes"]
 
     Deployment(path=path).deploy()
 
