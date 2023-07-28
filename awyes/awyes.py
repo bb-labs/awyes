@@ -12,8 +12,8 @@ from .utils import rgetattr, rsetattr
 
 class Deployment:
     def __init__(self, path="", verbose=False):
-        # Initialize paths and shared dictionary
-        self.path = path if path else "./awyes.yml"
+        # Initialize paths and log settings
+        self.path = path
         self.verbose = verbose
 
         # Load the config and docker images
@@ -107,7 +107,8 @@ class Deployment:
 
 
 def main():
-    _, path = argv
+    _, *path = argv
+    path = path[0] if path else "./awyes"
 
     Deployment(path=path).deploy()
 
