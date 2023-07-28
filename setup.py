@@ -6,13 +6,13 @@ setup(
     author_email='truman.purnell@gmail.com',
     description='A package for easy setup and management of resources on AWS',
     url='https://github.com/bb-labs/awyes',
-    packages=find_packages(exclude=['tests', 'docs']),
+    packages=find_packages(),
     install_requires=[
         'boto3',
         'docker',
         'pyyaml',
     ],
-    entry_points={'console_scripts': ['awyes=awyes:main']},
+    entry_points={'console_scripts': ['awyes=awyes.awyes:main']},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
