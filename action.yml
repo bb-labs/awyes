@@ -1,13 +1,13 @@
 # action.yml
 name: "awyes"
-description: "Deploy code easily to aws"
+description: "Deploy infra trivially to AWS. Yas."
 inputs:
   path:
-    description: "Path to your root project directory"
+    description: "Path to your awyes.yml file."
     required: false
-    default: "."
+    default: "./awyes.yml"
 runs:
   using: "docker"
   image: "Dockerfile"
   args:
-    - ${{ inputs.root }}
+    - ${{ inputs.path }}

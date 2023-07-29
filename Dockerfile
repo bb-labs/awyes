@@ -1,7 +1,5 @@
 FROM python:3.9
 
-WORKDIR /deployment
-COPY . .
-RUN pip3 install pipenv
+RUN pip3 install awyes
 
-ENTRYPOINT [ "sh", "/deployment/action.sh" ]
+ENTRYPOINT [ "awyes", "/github/workspace/$1" ]
