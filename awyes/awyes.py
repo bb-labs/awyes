@@ -5,6 +5,7 @@ import docker
 import yaml
 
 from sys import argv
+from pprint import pprint
 from textwrap import indent
 from os.path import normpath
 
@@ -98,7 +99,7 @@ class Deployment:
                 action = rgetattr(node_client, action_name)
                 value = action(**self.shared_lookup(node_args))
 
-                print(
+                pprint(
                     indent(f"setting value {value}", '\t+ ', lambda _: True))
 
                 rsetattr(
@@ -107,7 +108,7 @@ class Deployment:
                     value=value,
                 )
             except Exception as e:
-                print(
+                pprint(
                     indent(f"err: {e}", '\t- ', lambda _: True))
 
 
