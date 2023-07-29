@@ -30,11 +30,11 @@ jobs:
       # Bump version and create a new tag
       - name: Bump version and create tag
         run: |
-          current_version=$(head -n 1 VERSION)
+          current_version=$(python -c "import awyes; print(awyes.__version__)")
           new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
 
           echo "Bumping version from $current_version to $new_version"
-          echo "$new_version" > VERSION
+          echo "version = $new_version" > awyes/__init__.py
 
           git config user.name "trumanpurnell"
           git config user.email "truman.purnell@gmail.com"
