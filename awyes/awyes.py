@@ -84,18 +84,18 @@ class Deployment:
 
     def deploy(self):
         for node in self.get_topologically_sorted_nodes():
-            name = rgetattr(node, "name")
-            args = rgetattr(node, "args")
-            client = rgetattr(node, "client")
+            node_name = rgetattr(node, "name")
+            node_args = rgetattr(node, "args")
+            node_client = rgetattr(self.clients, rgetattr(node, "client"))
 
-            resource_name, action_name = name.split(".")
+            resource_name, action_name = node_name.split(".")
 
             try:
-                action = rgetattr(client, action_name)
-                value = action(**self.shared_lookup(args))
+                action = rgetattr(node_client, action_name)
+                value = action(**self.shared_lookup(node_args))
 
                 if self.verbose:
-                    print(f"setting value {value} for {name}")
+                    print(f"setting value {value} for {node_name}")
 
                 rsetattr(
                     context=self.config,
