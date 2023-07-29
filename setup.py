@@ -1,6 +1,5 @@
 import awyes
-
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='awyes',
@@ -9,7 +8,7 @@ setup(
     version=awyes.__version__,
     description='A package for easy setup and management of resources on AWS',
     url='https://github.com/bb-labs/awyes',
-    packages='awyes',
+    packages=find_packages(),
     install_requires=[
         'boto3',
         'docker',
