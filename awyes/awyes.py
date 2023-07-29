@@ -39,6 +39,9 @@ class Deployment:
     def get_topologically_sorted_nodes(self, seen=set(), sorted_nodes=[]):
         for node_name in self.get_fully_qualified_node_names():
             def visit_parents(node_name):
+                if node_name in seen:
+                    return
+
                 node = rgetattr(self.config, node_name)
 
                 node.setdefault("name", node_name)
@@ -52,8 +55,7 @@ class Deployment:
 
                 sorted_nodes.append(node)
 
-            if node_name not in seen:
-                visit_parents(node_name)
+            visit_parents(node_name)
 
         return sorted_nodes
 
