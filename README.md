@@ -10,7 +10,7 @@ The directory containing your awyes.yml. Defaults to `./awyes.yml`.
 
 ### Usage
 ```
-uses: actions/awyes@v1
+uses: bb-labs/awyes@main # or pin to latest major
 with:
   path: '/path/to/your/projects/awyes.yml'
 ```
