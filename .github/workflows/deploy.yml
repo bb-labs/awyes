@@ -30,7 +30,7 @@ jobs:
       # Bump version and create a new tag
       - name: Bump version and create tag (if applicable)
         run: |
-          message=${{ github.event.head_commit.message }}
+          commit_message=$(git show -s --format=%s)
 
           echo "did ya get it? $message"
 
