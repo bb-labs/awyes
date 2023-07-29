@@ -34,7 +34,7 @@ jobs:
           new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
 
           echo "Bumping version from $current_version to $new_version"
-          echo "version = \"$new_version\"" > awyes/__init__.py
+          echo "__version__ = \"$new_version\"" > awyes/__init__.py
 
           git config user.name "trumanpurnell"
           git config user.email "truman.purnell@gmail.com"
