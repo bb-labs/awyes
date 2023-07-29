@@ -5,6 +5,7 @@ import docker
 import yaml
 
 from sys import argv
+from textwrap import indent
 from os.path import normpath
 
 from .utils import rgetattr, rsetattr
@@ -89,12 +90,14 @@ class Deployment:
 
             resource_name, action_name = node_name.split(".")
 
+            print(node_name)
+
             try:
                 action = rgetattr(node_client, action_name)
                 value = action(**self.shared_lookup(node_args))
 
-                print(f"executing: {node_name}")
-                print(f"setting value {value}")
+                print(
+                    indent(f"setting value {value}", '\t+ ', lambda: True))
 
                 rsetattr(
                     context=self.config,
@@ -102,7 +105,8 @@ class Deployment:
                     value=value,
                 )
             except Exception as e:
-                print("err: ", e)
+                print(
+                    indent(f"err: {e}", '\t- ', lambda: True))
 
 
 def main():
