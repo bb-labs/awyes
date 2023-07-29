@@ -58,12 +58,22 @@ jobs:
           git push origin main
           git push origin --tags
 
-      # Publish the package to PyPI (optional)
+      # Publish the package to PyPI
       - name: Publish to PyPI
         if: github.ref == 'refs/heads/main'
         env:
           TWINE_USERNAME: trumanpurnell
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
+          commit_message=$(git log -1 --pretty=format:"%s")
+          bump_type=$(echo $commit_message | cut -d "[" -f2 | cut -d "]" -f1)
+
+          case "$bump_type" in
+            "patch") ;&
+            "minor") ;&
+            "major")
+              python setup.py sdist bdist_wheel
+              twine upload dist/*
+              ;;
+            *) ;;
+          esac
