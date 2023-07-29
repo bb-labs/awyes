@@ -11,10 +11,9 @@ from .utils import rgetattr, rsetattr
 
 
 class Deployment:
-    def __init__(self, path="", verbose=False):
+    def __init__(self, path=""):
         # Initialize paths and log settings
         self.path = path
-        self.verbose = verbose
 
         # Load the clients and config
         with open(normpath(path)) as config:
@@ -94,8 +93,8 @@ class Deployment:
                 action = rgetattr(node_client, action_name)
                 value = action(**self.shared_lookup(node_args))
 
-                if self.verbose:
-                    print(f"setting value {value} for {node_name}")
+                print(f"executing: {node_name}")
+                print(f"setting value {value}")
 
                 rsetattr(
                     context=self.config,
