@@ -1,6 +1,8 @@
 import unittest
 import yaml
 from .awyes import Deployment
+from .utils import rgetattr
+from pprint import pprint
 
 
 class DeploymentTestSuccess(unittest.TestCase):
@@ -8,8 +10,8 @@ class DeploymentTestSuccess(unittest.TestCase):
         super(DeploymentTestSuccess, self).__init__(*args, **kwargs)
         self.good_yaml = yaml.safe_load("./test_data/good.yml")
 
-    def test_ordering(self):
-        d = Deployment(path="./test_data/good.yml")
+    def test_ordering_and_populated_fields(self):
+        d = Deployment(path="./awyes/test_data/good.yml")
         sorted_nodes = d.get_topologically_sorted_nodes()
         self.assertEqual(sorted_nodes, [
             {
