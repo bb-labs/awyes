@@ -97,7 +97,7 @@ class Deployment:
                 value = action(**self.shared_lookup(node_args))
 
                 print(
-                    indent(f"setting value {value}", '\t+ ', lambda: True))
+                    indent(f"setting value {value}", '\t+ ', lambda _: True))
 
                 rsetattr(
                     context=self.config,
@@ -106,7 +106,7 @@ class Deployment:
                 )
             except Exception as e:
                 print(
-                    indent(f"err: {e}", '\t- ', lambda: True))
+                    indent(f"err: {e}", '\t- ', lambda _: True))
 
 
 def main():
