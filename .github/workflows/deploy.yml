@@ -32,7 +32,7 @@ jobs:
         run: |
           commit_message=$(git log -1 --pretty=format:"%s")
 
-          echo "did ya get it? $message"
+          echo "did ya get it? $commit_message"
 
           current_version=$(python -c "import awyes; print(awyes.__version__)")
           new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
