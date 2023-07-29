@@ -1,6 +1,9 @@
 # action.yml
 name: "awyes"
 description: "Deploy infra trivially to AWS. Yas."
+branding:
+  icon: "thumbs-up"
+  color: "white"
 inputs:
   path:
     description: "Path to your awyes.yml file."
