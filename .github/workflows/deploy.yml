@@ -45,7 +45,7 @@ jobs:
 
               git config user.name "trumanpurnell"
               git config user.email "truman.purnell@gmail.com"
-              git commit -am "Bump version to $new_version"
+              git commit -am "[$bump_type]: $new_version"
               git tag $new_version
               ;;
             *) ;;
