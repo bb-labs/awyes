@@ -31,19 +31,22 @@ jobs:
       - name: Bump version and create tag (if applicable)
         run: |
           commit_message=$(git log -1 --pretty=format:"%s")
+          bump_type=$(echo $commit_message | cut -d "[" -f2 | cut -d "]" -f1)
+          
+          echo "did ya get it? $bump_type"
 
-          echo "did ya get it? $commit_message"
+          if [[ $bump_type ]]; then
+            current_version=$(python -c "import awyes; print(awyes.__version__)")
+            new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
 
-          current_version=$(python -c "import awyes; print(awyes.__version__)")
-          new_version=$(python -c "import semver; print(semver.bump_patch('$current_version'))")
+            echo "Bumping version from $current_version to $new_version"
+            echo "__version__ = \"$new_version\"" > awyes/__init__.py
 
-          echo "Bumping version from $current_version to $new_version"
-          echo "__version__ = \"$new_version\"" > awyes/__init__.py
-
-          git config user.name "trumanpurnell"
-          git config user.email "truman.purnell@gmail.com"
-          git commit -am "Bump version to $new_version"
-          git tag $new_version
+            git config user.name "trumanpurnell"
+            git config user.email "truman.purnell@gmail.com"
+            git commit -am "Bump version to $new_version"
+            git tag $new_version
+          fi
 
       # Push the new tag to the repository
       - name: Push new tag
