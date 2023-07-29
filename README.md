@@ -9,9 +9,11 @@ Deploy infra trivially to AWS. Yas.
 The directory containing your awyes.yml. Defaults to `./awyes.yml`.
 
 ### Example usage
+```
 uses: actions/awyes@v1
 with:
-  path: '/path/to/projects/awyes.yml'
+  path: '/path/to/your/projects/awyes.yml'
+```
 
 ## Example awyes.yml
 ```
