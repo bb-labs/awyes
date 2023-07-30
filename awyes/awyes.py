@@ -15,7 +15,7 @@ from .utils import rgetattr, rsetattr
 
 class Deployment:
     def __init__(self, path=""):
-        # Initialize paths and log settings
+        # Initialize paths
         self.path = path
 
         # Load the clients and config
