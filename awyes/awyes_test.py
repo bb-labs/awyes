@@ -17,6 +17,9 @@ class DeploymentTestSuccess(unittest.TestCase):
             'pastewin_role_attach_s3.attach_role_policy'
         ])
 
+    def test_deploy(self):
+        self.d.deploy()
+
 
 if __name__ == "__main__":
     unittest.main()

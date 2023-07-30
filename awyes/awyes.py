@@ -3,6 +3,7 @@ import re
 import boto3
 import docker
 import yaml
+import json
 
 from sys import argv
 from pprint import pprint
@@ -93,14 +94,14 @@ class Deployment:
 
             resource_name, action_name = node_name.split(".")
 
-            print(node_name)
+            print(f"\033[36m{node_name}\033[0m")
 
             try:
                 action = rgetattr(node_client, action_name)
                 value = action(**self.shared_lookup(node_args))
 
-                pprint(
-                    indent(f"setting value {value}", '\t+ ', lambda _: True))
+                print(indent(json.dumps(value, indent=2,
+                      default=str), '+ ', lambda _: True))
 
                 rsetattr(
                     context=self.config,
@@ -108,8 +109,8 @@ class Deployment:
                     value=value,
                 )
             except Exception as e:
-                pprint(
-                    indent(f"err: {e}", '\t- ', lambda _: True))
+                print(indent(json.dumps(e, indent=2, default=str),
+                      '- ', lambda _: True))
 
 
 def main():
