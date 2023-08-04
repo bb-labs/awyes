@@ -6,7 +6,6 @@ import yaml
 import json
 
 from sys import argv
-from pprint import pprint
 from textwrap import indent
 from os.path import normpath
 
