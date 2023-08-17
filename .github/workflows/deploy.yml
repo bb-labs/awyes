@@ -1,9 +1,17 @@
 name: Python Package Release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Semver bump type for pypi package"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   release:
@@ -16,3 +24,10 @@ jobs:
 
       - name: Bump and release pypi
         uses: bb-labs/pypiinthesky@main
+        with:
+          package_name: awyes
+          gh_email: truman.purnell@gmail.com
+          gh_username: trumanpurnell
+          pypi_email: truman.purnell@gmail.com
+          pypi_password: ${{ secrets.PYPI_PASSWORD }}
+          bump_type: ${{ inputs.bump }}
