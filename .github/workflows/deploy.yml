@@ -26,6 +26,7 @@ jobs:
         uses: bb-labs/pypiinthesky@main
         with:
           package_name: awyes
+          bump_type: ${{ inputs.bump }}
           pypi_email: truman.purnell@gmail.com
           pypi_password: ${{ secrets.PYPI_PASSWORD }}
-          bump_type: ${{ inputs.bump }}
+          # gh_username: ${{ github.actor }}
