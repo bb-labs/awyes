@@ -15,22 +15,23 @@ from .utils import rgetattr, rsetattr
 class Deployment:
     def __init__(self, path="", config=""):
         self.path = path
-        self.config = yaml.safe_load(config)
 
+        self.config = yaml.safe_load(config)
         if not self.config:
             with open(normpath(path)) as config:
                 self.config = yaml.safe_load(config)
-                self.clients = {
-                    "os": os,
-                    "s3": boto3.client("s3"),
-                    "ecr": boto3.client("ecr"),
-                    "sts": boto3.client("sts"),
-                    "iam": boto3.client("iam"),
-                    "events": boto3.client("events"),
-                    "lambda": boto3.client("lambda"),
-                    "session": boto3.session.Session(),
-                    "docker": docker.client.from_env(),
-                }
+
+        self.clients = {
+            "os": os,
+            "s3": boto3.client("s3"),
+            "ecr": boto3.client("ecr"),
+            "sts": boto3.client("sts"),
+            "iam": boto3.client("iam"),
+            "events": boto3.client("events"),
+            "lambda": boto3.client("lambda"),
+            "session": boto3.session.Session(),
+            "docker": docker.client.from_env(),
+        }
 
     def get_fully_qualified_node_names(self):
         return [f"{resource_name}.{action_name}"
