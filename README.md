@@ -1,14 +1,16 @@
 # awyes
 
 ## Action
+
 Deploy infra trivially to AWS. Yas.
 
 ### Inputs
 
-#### `path`
-The directory containing your awyes.yml. Defaults to `./awyes.yml`.
+- #### `path`
+  The directory containing your awyes.yml. Defaults to `./awyes.yml`.
 
 ### Usage
+
 ```
 uses: bb-labs/awyes@main # or pin to latest major
 with:
@@ -16,6 +18,7 @@ with:
 ```
 
 ## An `awyes.yml` file
+
 ```
 # # -------------------------------------------------------------------
 # # roles
