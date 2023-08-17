@@ -25,5 +25,5 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
-    keywords='aws resources manager setup management',
+    keywords='aws resources manager setup management automation',
 )
