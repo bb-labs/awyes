@@ -26,8 +26,6 @@ jobs:
         uses: bb-labs/pypiinthesky@main
         with:
           package_name: awyes
-          gh_email: truman.purnell@gmail.com
-          gh_username: trumanpurnell
           pypi_email: truman.purnell@gmail.com
           pypi_password: ${{ secrets.PYPI_PASSWORD }}
           bump_type: ${{ inputs.bump }}
