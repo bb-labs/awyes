@@ -15,7 +15,7 @@ from .utils import rgetattr, rsetattr
 class Deployment:
     def __init__(self, path="", config=""):
         self.path = path
-        self.config = config
+        self.config = yaml.safe_load(config)
 
         if not self.config:
             with open(normpath(path)) as config:
