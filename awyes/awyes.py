@@ -26,6 +26,7 @@ class Deployment:
             "s3": boto3.client("s3"),
             "ecr": boto3.client("ecr"),
             "sts": boto3.client("sts"),
+            "rds": boto3.client("rds"),
             "iam": boto3.client("iam"),
             "events": boto3.client("events"),
             "lambda": boto3.client("lambda"),
