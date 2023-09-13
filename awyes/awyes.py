@@ -91,12 +91,10 @@ class Deployment:
             if not match:
                 return args
 
-            value = rgetattr(self.config, match.group("reference"))
+            value = self.shared_lookup(
+                rgetattr(self.config, match.group("reference")))
 
-            if isinstance(value, str):
-                return re.sub(re.escape(match.group()), value, args)
-
-            return value
+            return re.sub(re.escape(match.group()), value, args)
 
         return args
 
@@ -106,7 +104,7 @@ class Deployment:
 
             if self.workflow not in rgetattr(node, "workflow"):
                 print(
-                    f"{Colors.WARNING}Skipping `{node_name}`, not included in workflow `{self.workflow}`{Colors.ENDC}")
+                    f"{Colors.WARNING}Skipping `{node_name}`{Colors.ENDC}")
 
                 continue
 
@@ -119,6 +117,7 @@ class Deployment:
 
             try:
                 action = rgetattr(node_client, action_name)
+                print(node_args)
                 value = action(**self.shared_lookup(node_args))
 
                 print(indent(json.dumps(value, indent=2,
