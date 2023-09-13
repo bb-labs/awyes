@@ -9,8 +9,13 @@ inputs:
     description: "Path to your awyes.yml file."
     required: false
     default: "./awyes.yml"
+  workflow:
+    description: "Workflow to run within aws yaml"
+    required: false
+    default: "init"
 runs:
   using: "docker"
   image: "Dockerfile"
   args:
     - ${{ inputs.path }}
+    - ${{ inputs.workflow }}

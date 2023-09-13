@@ -23,6 +23,14 @@ def rgetattr(context, accessor):
     )
 
 
+def rhasattr(context, accessor):
+    try:
+        _ = rgetattr(context, accessor)
+        return True
+    except Exception:
+        return False
+
+
 def rsetattr(context, accessor, value):
     *target, final = accessor.split('.')
 

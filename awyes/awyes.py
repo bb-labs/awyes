@@ -4,25 +4,32 @@ import boto3
 import docker
 import yaml
 import json
+import base64
+import argparse
 
-from sys import argv
 from textwrap import indent
 from os.path import normpath
 
-from .utils import rgetattr, rsetattr
+from .utils import rgetattr, rsetattr, rhasattr
 
 
 class Deployment:
-    def __init__(self, path="", config=""):
-        self.path = path
+    def __init__(self, **kwargs):
+        if 'workflow' not in kwargs:
+            raise "Please pass a workflow tag"
 
-        self.config = yaml.safe_load(config)
+        self.path = kwargs.get("path")
+        self.workflow = kwargs.get("workflow")
+        self.config = yaml.safe_load(kwargs.get("config"))
+
         if not self.config:
-            with open(normpath(path)) as config:
+            with open(normpath(self.path)) as config:
                 self.config = yaml.safe_load(config)
 
         self.clients = {
             "os": os,
+            "re": re,
+            "base64": base64,
             "s3": boto3.client("s3"),
             "ecr": boto3.client("ecr"),
             "sts": boto3.client("sts"),
@@ -30,7 +37,6 @@ class Deployment:
             "iam": boto3.client("iam"),
             "events": boto3.client("events"),
             "lambda": boto3.client("lambda"),
-            "session": boto3.session.Session(),
             "docker": docker.client.from_env(),
         }
 
@@ -46,6 +52,10 @@ class Deployment:
                     return
 
                 node = rgetattr(self.config, node_name)
+
+                if not rhasattr(node, "workflow"):
+                    raise Exception(
+                        f"{node_name} is missing workflow tags.")
 
                 node.setdefault("name", node_name)
                 node.setdefault("args", {})
@@ -72,6 +82,9 @@ class Deployment:
         if isinstance(args, list):
             return list(map(lambda value: self.shared_lookup(value), args))
 
+        if isinstance(args, bytes):
+            return args.decode()
+
         if isinstance(args, str):
             match = re.search("\$\((?P<reference>.*)\)", args)
 
@@ -89,6 +102,9 @@ class Deployment:
 
     def deploy(self):
         for node in self.get_topologically_sorted_nodes():
+            if self.workflow not in rgetattr(node, "workflow"):
+                continue
+
             node_name = rgetattr(node, "name")
             node_args = rgetattr(node, "args")
             node_client = rgetattr(self.clients, rgetattr(node, "client"))
@@ -115,10 +131,19 @@ class Deployment:
 
 
 def main():
-    _, *path = argv
-    path = path[0] if path else "./awyes.yml"
+    parser = argparse.ArgumentParser(description='Create an awyes deployment')
 
-    Deployment(path=path).deploy()
+    parser.add_argument('--workflow', type=str, required=True,
+                        help='The awyes workflow type')
+    parser.add_argument('--path', type=str, required=False,
+                        default="awyes.yml", help='Path to awyes config')
+    parser.add_argument('--config', type=str, required=False, default="",
+                        help='Raw config to use in place of path')
+
+    args = parser.parse_args()
+
+    Deployment(path=args.path, workflow=args.workflow,
+               config=args.config).deploy()
 
 
 if __name__ == '__main__':

@@ -2,18 +2,22 @@
 # # roles
 # # --------------------------------------------------------------------
 
-pastewin_role:
+hoobla_role:
   get_role:
     client: iam
     depends_on:
-      - pastewin_role.create_role
+      - hoobla_role.create_role
+    workflow:
+      - init
     args:
-      RoleName: pastewin
+      RoleName: hoobla
   create_role:
     client: iam
+    workflow:
+      - init
     args:
-      RoleName: pastewin
-      Description: Role for pastewin
+      RoleName: hoobla
+      Description: Role for hoobla
       AssumeRolePolicyDocument: >
         {
           "Version": "2012-10-17",
@@ -24,20 +28,24 @@ pastewin_role:
           }]
         }
 
-pastewin_role_attach_cloud:
+hoobla_role_attach_cloud:
   attach_role_policy:
     client: iam
     depends_on:
-      - pastewin_role.get_role
+      - hoobla_role.get_role
+    workflow:
+      - init
     args:
-      RoleName: pastewin
+      RoleName: hoobla
       PolicyArn: arn:aws:iam::aws:policy/CloudWatchFullAccess
 
-pastewin_role_attach_s3:
+hoobla_role_attach_s3:
   attach_role_policy:
     client: iam
     depends_on:
-      - pastewin_role.get_role
+      - hoobla_role.get_role
+    workflow:
+      - init
     args:
-      RoleName: pastewin
+      RoleName: hoobla
       PolicyArn: arn:aws:iam::aws:policy/AmazonS3FullAccess
