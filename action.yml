@@ -8,10 +8,10 @@ inputs:
   path:
     description: "Path to your awyes.yml file."
     required: false
-    default: "./awyes.yml"
+    default: "awyes.yml"
   workflow:
     description: "Workflow to run within aws yaml"
-    required: false
+    required: true
     default: "init"
 runs:
   using: "docker"

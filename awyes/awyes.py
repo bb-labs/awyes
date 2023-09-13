@@ -10,7 +10,7 @@ import argparse
 from textwrap import indent
 from os.path import normpath
 
-from .utils import rgetattr, rsetattr, rhasattr
+from .utils import rgetattr, rsetattr, rhasattr, Colors
 
 
 class Deployment:
@@ -102,16 +102,20 @@ class Deployment:
 
     def deploy(self):
         for node in self.get_topologically_sorted_nodes():
+            node_name = rgetattr(node, "name")
+
             if self.workflow not in rgetattr(node, "workflow"):
+                print(
+                    f"{Colors.WARNING}Skipping `{node_name}`, not included in workflow `{self.workflow}`{Colors.ENDC}")
+
                 continue
 
-            node_name = rgetattr(node, "name")
             node_args = rgetattr(node, "args")
             node_client = rgetattr(self.clients, rgetattr(node, "client"))
 
             resource_name, action_name = node_name.split(".")
 
-            print(f"\033[36m{node_name}\033[0m")
+            print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
 
             try:
                 action = rgetattr(node_client, action_name)
