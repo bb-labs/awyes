@@ -17,7 +17,6 @@ from .utils import rgetattr, rsetattr, rhasattr, Colors
 class Deployment:
     def __init__(self, **kwargs):
         self.path = kwargs.get("path")
-        self.action = kwargs.get("action", "")
         self.workflow = kwargs.get("workflow")
         self.verbose = kwargs.get("verbose", True)
         self.dry_run = kwargs.get("dry_run", False)
@@ -173,11 +172,12 @@ def main():
     parser = argparse.ArgumentParser(description='Create an awyes deployment')
 
     parser.add_argument('--dry_run', action=argparse.BooleanOptionalAction)
+    parser.add_argument('--verbose', action=argparse.BooleanOptionalAction)
     parser.add_argument('--workflow', type=str, required=False,
                         help='The awyes workflow type')
     parser.add_argument('--path', type=str, required=False,
                         default="awyes.yml", help='Path to awyes config')
-    parser.add_argument('--config', type=str, required=False, default="",
+    parser.add_argument('--config', type=str, required=False,
                         help='Raw config to use in place of path')
     parser.add_argument('--action', type=str, required=False,
                         help="A specific action to run")
