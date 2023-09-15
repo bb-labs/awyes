@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import boto3
 import docker
 import yaml
@@ -20,11 +21,14 @@ class Deployment:
 
         self.path = kwargs.get("path")
         self.workflow = kwargs.get("workflow")
+        self.preview = kwargs.get("preview", False)
         self.config = yaml.safe_load(kwargs.get("config"))
 
         if not self.config:
             with open(normpath(self.path)) as config:
                 self.config = yaml.safe_load(config)
+
+        self.ir = copy.deepcopy(self.config)
 
         self.clients = {
             "os": os,
@@ -92,39 +96,52 @@ class Deployment:
                 return args
 
             value = self.shared_lookup(
-                rgetattr(self.config, match.group("reference")))
+                rgetattr(self.ir, match.group("reference")))
 
-            return re.sub(re.escape(match.group()), value, args)
+            return re.sub(re.escape(match.group()), value, args) \
+                if isinstance(value, str) else value
 
         return args
 
     def deploy(self):
+        print(f"{Colors.UNDERLINE}Executing workflow: \
+              {self.workflow}{Colors.ENDC}")
+
+        workflow_nodes = []
         for node in self.get_topologically_sorted_nodes():
             node_name = rgetattr(node, "name")
 
-            if self.workflow not in rgetattr(node, "workflow"):
+            # Ensure this node is part of the workflow
+            if self.workflow in rgetattr(node, "workflow"):
                 print(
-                    f"{Colors.WARNING}Skipping `{node_name}`{Colors.ENDC}")
+                    f"{Colors.BOLD}{node_name}{Colors.ENDC}")
 
-                continue
+                workflow_nodes.append(node)
 
+        if self.preview:
+            return
+
+        for node in workflow_nodes:
+            node_name = rgetattr(node, "name")
+
+            # Print the node name
+            print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
+
+            # Resolve the client
             node_args = rgetattr(node, "args")
             node_client = rgetattr(self.clients, rgetattr(node, "client"))
 
+            # Resolve any args, run the action, and save the result
             resource_name, action_name = node_name.split(".")
-
-            print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
-
             try:
                 action = rgetattr(node_client, action_name)
-                print(node_args)
                 value = action(**self.shared_lookup(node_args))
 
                 print(indent(json.dumps(value, indent=2,
                       default=str), '+ ', lambda _: True))
 
                 rsetattr(
-                    context=self.config,
+                    context=self.ir,
                     accessor=f"{resource_name}.{action_name}",
                     value=value,
                 )
@@ -142,11 +159,9 @@ def main():
                         default="awyes.yml", help='Path to awyes config')
     parser.add_argument('--config', type=str, required=False, default="",
                         help='Raw config to use in place of path')
+    parser.add_argument('--preview', action=argparse.BooleanOptionalAction)
 
-    args = parser.parse_args()
-
-    Deployment(path=args.path, workflow=args.workflow,
-               config=args.config).deploy()
+    Deployment(**vars(parser.parse_args())).deploy()
 
 
 if __name__ == '__main__':
