@@ -2,7 +2,8 @@ FROM python:3.9
 
 RUN pip3 install awyes
 
-ENTRYPOINT "ls -la"
+CMD ls -l
+ENTRYPOINT ["ls", "-la"]
 
 # CMD ls -l
 
