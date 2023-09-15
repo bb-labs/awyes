@@ -16,12 +16,11 @@ from .utils import rgetattr, rsetattr, rhasattr, Colors
 
 class Deployment:
     def __init__(self, **kwargs):
-        if 'workflow' not in kwargs:
-            raise "Please pass a workflow tag"
-
         self.path = kwargs.get("path")
+        self.action = kwargs.get("action", "")
         self.workflow = kwargs.get("workflow")
-        self.preview = kwargs.get("preview", False)
+        self.verbose = kwargs.get("verbose", True)
+        self.dry_run = kwargs.get("dry_run", False)
         self.config = yaml.safe_load(kwargs.get("config"))
 
         if not self.config:
@@ -49,42 +48,46 @@ class Deployment:
                 for resource_name, actions in self.config.items()
                 for action_name in actions.keys()]
 
-    def get_topologically_sorted_nodes(self, seen=set(), sorted_nodes=[]):
-        for node_name in self.get_fully_qualified_node_names():
-            def visit_parents(node_name):
-                if node_name in seen:
-                    return
+    def visit_parents(self, node_name, seen=set(), sorted_nodes=[]):
+        if node_name in seen:
+            return
 
-                node = rgetattr(self.config, node_name)
+        node = rgetattr(self.config, node_name)
 
-                if not rhasattr(node, "workflow"):
-                    raise Exception(
-                        f"{node_name} is missing workflow tags.")
+        if not rhasattr(node, "workflow"):
+            raise Exception(
+                f"{node_name} is missing workflow tags.")
 
-                node.setdefault("name", node_name)
-                node.setdefault("args", {})
-                node.setdefault("depends_on", [])
+        node.setdefault("name", node_name)
+        node.setdefault("args", {})
+        node.setdefault("depends_on", [])
 
-                seen.add(node_name)
+        seen.add(node_name)
 
-                for parent_node_name in node.get("depends_on"):
-                    visit_parents(parent_node_name)
+        for parent_node_name in node.get("depends_on"):
+            self.visit_parents(parent_node_name. seen, sorted_nodes)
 
-                sorted_nodes.append(node)
-
-            visit_parents(node_name)
+        sorted_nodes.append(node)
 
         return sorted_nodes
 
-    def shared_lookup(self, args):
+    def get_topologically_sorted_nodes(self):
+        sorted_nodes = []
+
+        for node_name in self.get_fully_qualified_node_names():
+            self.visit_parents(node_name, sorted_nodes=sorted_nodes)
+
+        return sorted_nodes
+
+    def lookup(self, args):
         if isinstance(args, dict):
             for key, value in args.items():
-                args[key] = self.shared_lookup(value)
+                args[key] = self.lookup(value)
 
             return args
 
         if isinstance(args, list):
-            return list(map(lambda value: self.shared_lookup(value), args))
+            return list(map(lambda value: self.lookup(value), args))
 
         if isinstance(args, bytes):
             return args.decode()
@@ -95,7 +98,7 @@ class Deployment:
             if not match:
                 return args
 
-            value = self.shared_lookup(
+            value = self.lookup(
                 rgetattr(self.ir, match.group("reference")))
 
             return re.sub(re.escape(match.group()), value, args) \
@@ -103,65 +106,91 @@ class Deployment:
 
         return args
 
-    def deploy(self):
-        print(f"{Colors.UNDERLINE}Executing workflow: \
-              {self.workflow}{Colors.ENDC}")
+    def execute(self, node):
+        node_name = rgetattr(node, "name")
+        node_args = rgetattr(node, "args")
+        node_client = rgetattr(self.clients, rgetattr(node, "client"))
+        resource_name, action_name = node_name.split(".")
 
+        if self.verbose:
+            print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
+
+        try:
+            action = rgetattr(node_client, action_name)
+            value = action(**self.lookup(node_args))
+            if self.verbose:
+                print(indent(json.dumps(value, indent=2,
+                                        default=str), '+ ', lambda _: True))
+
+            rsetattr(
+                context=self.ir,
+                accessor=f"{resource_name}.{action_name}",
+                value=value,
+            )
+        except Exception as e:
+            if self.verbose:
+                print(indent(json.dumps(e, indent=2, default=str),
+                             '- ', lambda _: True))
+
+    def summarize(self, nodes):
+        print(f"{Colors.UNDERLINE}Executing nodes for: \
+               {self.workflow if self.workflow else self.action}{Colors.ENDC}")
+
+        for node in nodes:
+            print(f"{Colors.BOLD}{rgetattr(node, 'name')}{Colors.ENDC}")
+
+        print('------------------------------------------')
+
+    def deploy(self):
         workflow_nodes = []
         for node in self.get_topologically_sorted_nodes():
-            node_name = rgetattr(node, "name")
-
-            # Ensure this node is part of the workflow
             if self.workflow in rgetattr(node, "workflow"):
-                print(
-                    f"{Colors.BOLD}{node_name}{Colors.ENDC}")
-
                 workflow_nodes.append(node)
 
-        if self.preview:
+        if self.verbose:
+            self.summarize(workflow_nodes)
+
+        if self.dry_run:
             return
 
         for node in workflow_nodes:
-            node_name = rgetattr(node, "name")
+            self.execute(node)
 
-            # Print the node name
-            print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
+    def one_off(self, node_name):
+        dependencies = self.visit_parents(node_name)
 
-            # Resolve the client
-            node_args = rgetattr(node, "args")
-            node_client = rgetattr(self.clients, rgetattr(node, "client"))
+        if self.verbose:
+            self.summarize(dependencies)
 
-            # Resolve any args, run the action, and save the result
-            resource_name, action_name = node_name.split(".")
-            try:
-                action = rgetattr(node_client, action_name)
-                value = action(**self.shared_lookup(node_args))
+        if self.dry_run:
+            return
 
-                print(indent(json.dumps(value, indent=2,
-                      default=str), '+ ', lambda _: True))
-
-                rsetattr(
-                    context=self.ir,
-                    accessor=f"{resource_name}.{action_name}",
-                    value=value,
-                )
-            except Exception as e:
-                print(indent(json.dumps(e, indent=2, default=str),
-                      '- ', lambda _: True))
+        for node in dependencies:
+            self.execute(node)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Create an awyes deployment')
 
-    parser.add_argument('--workflow', type=str, required=True,
+    parser.add_argument('--dry_run', action=argparse.BooleanOptionalAction)
+    parser.add_argument('--workflow', type=str, required=False,
                         help='The awyes workflow type')
     parser.add_argument('--path', type=str, required=False,
                         default="awyes.yml", help='Path to awyes config')
     parser.add_argument('--config', type=str, required=False, default="",
                         help='Raw config to use in place of path')
-    parser.add_argument('--preview', action=argparse.BooleanOptionalAction)
+    parser.add_argument('--action', type=str, required=False,
+                        help="A specific action to run")
 
-    Deployment(**vars(parser.parse_args())).deploy()
+    args = parser.parse_args()
+    deployment = Deployment(**vars(args))
+
+    if args.action:
+        deployment.one_off(args.action)
+    elif args.workflow:
+        deployment.deploy()
+    else:
+        raise "Please pass either a workflow tag or an action"
 
 
 if __name__ == '__main__':
