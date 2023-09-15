@@ -17,9 +17,8 @@ from .utils import rgetattr, rsetattr, rhasattr, Colors
 class Deployment:
     def __init__(self, **kwargs):
         self.path = kwargs.get("path")
-        self.workflow = kwargs.get("workflow")
-        self.verbose = kwargs.get("verbose", True)
-        self.dry_run = kwargs.get("dry_run", False)
+        self.verbose = kwargs.get("verbose")
+        self.preview = kwargs.get("preview")
         self.config = yaml.safe_load(kwargs.get("config"))
 
         if not self.config:
@@ -32,6 +31,7 @@ class Deployment:
             "os": os,
             "re": re,
             "base64": base64,
+            "docker": docker.client.from_env(),
             "s3": boto3.client("s3"),
             "ecr": boto3.client("ecr"),
             "sts": boto3.client("sts"),
@@ -39,7 +39,7 @@ class Deployment:
             "iam": boto3.client("iam"),
             "events": boto3.client("events"),
             "lambda": boto3.client("lambda"),
-            "docker": docker.client.from_env(),
+            "organizations": boto3.client("organizations"),
         }
 
     def get_fully_qualified_node_names(self):
@@ -64,7 +64,7 @@ class Deployment:
         seen.add(node_name)
 
         for parent_node_name in node.get("depends_on"):
-            self.visit_parents(parent_node_name. seen, sorted_nodes)
+            self.visit_parents(parent_node_name, seen, sorted_nodes)
 
         sorted_nodes.append(node)
 
@@ -131,37 +131,40 @@ class Deployment:
                 print(indent(json.dumps(e, indent=2, default=str),
                              '- ', lambda _: True))
 
-    def summarize(self, nodes):
+    def summarize(self, nodes, plan):
         print(f"{Colors.UNDERLINE}Executing nodes for: \
-               {self.workflow if self.workflow else self.action}{Colors.ENDC}")
+              {plan}{Colors.ENDC}")
 
         for node in nodes:
             print(f"{Colors.BOLD}{rgetattr(node, 'name')}{Colors.ENDC}")
 
-        print('------------------------------------------')
+        print()
 
-    def deploy(self):
+    def deploy(self, workflow):
         workflow_nodes = []
         for node in self.get_topologically_sorted_nodes():
-            if self.workflow in rgetattr(node, "workflow"):
+            if workflow in rgetattr(node, "workflow"):
                 workflow_nodes.append(node)
 
         if self.verbose:
-            self.summarize(workflow_nodes)
+            self.summarize(workflow_nodes, workflow)
 
-        if self.dry_run:
+        if self.preview:
             return
 
         for node in workflow_nodes:
             self.execute(node)
 
-    def one_off(self, node_name):
+    def one_off(self, node_name, include_deps):
         dependencies = self.visit_parents(node_name)
 
-        if self.verbose:
-            self.summarize(dependencies)
+        if not include_deps:
+            dependencies = [dependencies.pop()]
 
-        if self.dry_run:
+        if self.verbose:
+            self.summarize(dependencies, node_name)
+
+        if self.preview:
             return
 
         for node in dependencies:
@@ -171,24 +174,32 @@ class Deployment:
 def main():
     parser = argparse.ArgumentParser(description='Create an awyes deployment')
 
-    parser.add_argument('--dry_run', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--verbose', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--workflow', type=str, required=False,
+    parser.add_argument(
+        '--preview', action=argparse.BooleanOptionalAction, default=False,
+        help="Whether or not to execute the plan")
+    parser.add_argument(
+        '--verbose', action=argparse.BooleanOptionalAction, default=True,
+        help="Enable logging")
+    parser.add_argument(
+        '--include-deps', action=argparse.BooleanOptionalAction, default=False,
+        help="When specifying an action, whether to include dependent actions")
+
+    parser.add_argument('--workflow', type=str, required=False, default="",
                         help='The awyes workflow type')
     parser.add_argument('--path', type=str, required=False,
                         default="awyes.yml", help='Path to awyes config')
-    parser.add_argument('--config', type=str, required=False,
+    parser.add_argument('--config', type=str, required=False, default="",
                         help='Raw config to use in place of path')
-    parser.add_argument('--action', type=str, required=False,
+    parser.add_argument('--action', type=str, required=False, default="",
                         help="A specific action to run")
 
     args = parser.parse_args()
     deployment = Deployment(**vars(args))
 
     if args.action:
-        deployment.one_off(args.action)
+        deployment.one_off(args.action, args.include_deps)
     elif args.workflow:
-        deployment.deploy()
+        deployment.deploy(args.workflow)
     else:
         raise "Please pass either a workflow tag or an action"
 
