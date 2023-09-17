@@ -5,7 +5,9 @@ import boto3
 import docker
 import yaml
 import json
+import types
 import base64
+import builtins
 import argparse
 
 from textwrap import indent
@@ -31,6 +33,7 @@ class Deployment:
             "os": os,
             "re": re,
             "base64": base64,
+            "builtins": builtins,
             "docker": docker.client.from_env(),
             "s3": boto3.client("s3"),
             "ecr": boto3.client("ecr"),
@@ -115,21 +118,27 @@ class Deployment:
             print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
 
         try:
+            args = self.lookup(node_args)
             action = rgetattr(node_client, action_name)
-            value = action(**self.lookup(node_args))
+
+            if isinstance(args, list):
+                value = action(*args)
+            elif isinstance(args, dict):
+                value = action(**args)
+
+            if isinstance(value, types.GeneratorType):
+                value = list(value)  # auto unpack generators
+
             if self.verbose:
-                print(indent(json.dumps(value, indent=2,
-                                        default=str), '+ ', lambda _: True))
+                self.print_status(value, Colors.OKGREEN)
 
             rsetattr(
                 context=self.ir,
                 accessor=f"{resource_name}.{action_name}",
-                value=value,
-            )
+                value=value)
+
         except Exception as e:
-            if self.verbose:
-                print(indent(json.dumps(e, indent=2, default=str),
-                             '- ', lambda _: True))
+            self.print_status(e, Colors.FAIL)
 
     def summarize(self, nodes, plan):
         print(f"{Colors.UNDERLINE}Executing nodes for: \
@@ -139,6 +148,13 @@ class Deployment:
             print(f"{Colors.BOLD}{rgetattr(node, 'name')}{Colors.ENDC}")
 
         print()
+
+    def print_status(self, value, status):
+        indicator = "+" if status == Colors.OKGREEN else "-"
+        print(indent(json.dumps(value, indent=2,
+                                default=str),
+                     f"{status}{indicator} {Colors.ENDC}",
+                     lambda _: True))
 
     def deploy(self, workflow):
         workflow_nodes = []

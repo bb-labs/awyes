@@ -14,7 +14,10 @@ class Colors:
 
 
 def sanitize_key(key):
-    return int(key) if key.isnumeric() else key
+    try:
+        return int(key)
+    except Exception:
+        return key
 
 
 def subscript(context, key):
