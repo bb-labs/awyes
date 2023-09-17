@@ -42,6 +42,7 @@ class Deployment:
             "iam": boto3.client("iam"),
             "events": boto3.client("events"),
             "lambda": boto3.client("lambda"),
+            "apigateway": boto3.client('apigateway'),
             "organizations": boto3.client("organizations"),
         }
 
