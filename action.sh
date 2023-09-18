@@ -1,3 +1,3 @@
 #!/bin/bash
 
-awyes --path /github/workspace/$1 --workflow $2
+awyes --config /github/workspace/$1 --clients /github/workspace/$2 --workflow $3

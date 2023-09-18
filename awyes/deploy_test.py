@@ -1,5 +1,5 @@
 import unittest
-from .awyes import Deployment
+from .deploy import Deployment
 from .utils import rgetattr
 
 
