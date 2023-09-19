@@ -28,14 +28,14 @@ def main():
         help="When specifying an action, whether to include dependent actions")
     parser.add_argument(
         '--include-docker', action=argparse.BooleanOptionalAction,
-        default=False,
+        default=True,
         help="Include a docker client")
 
     parser.add_argument('--workflow', type=str, required=False, default="",
                         help='The awyes workflow type')
     parser.add_argument('--config', type=str, required=False,
                         default="awyes.yml", help='Path to awyes config')
-    parser.add_argument('--clients', type=str, required=False, default="",
+    parser.add_argument('--clients', type=str, required=False, default="awyes.py",
                         help='Path to user specified awyes clients')
     parser.add_argument('--raw', type=str, required=False, default="",
                         help='Raw config to use in place of path')
