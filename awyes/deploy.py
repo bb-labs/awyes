@@ -1,4 +1,5 @@
 import re
+import json
 import types
 
 from copy import deepcopy
@@ -8,15 +9,15 @@ from .utils import rgetattr, rsetattr, rhasattr, Colors
 
 
 class Cache(dict):
-    def interpret(self, args):
+    def resolve(self, args):
         if isinstance(args, dict):
             for key, value in args.items():
-                args[key] = self.interpret(value)
+                args[key] = self.resolve(value)
 
             return args
 
         if isinstance(args, list):
-            return list(map(lambda value: self.interpret(value), args))
+            return list(map(lambda value: self.resolve(value), args))
 
         if isinstance(args, bytes):
             return args.decode()
@@ -27,8 +28,7 @@ class Cache(dict):
             if not match:
                 return args
 
-            value = self.interpret(
-                rgetattr(self.ir, match.group("reference")))
+            value = self.resolve(rgetattr(self, match.group("reference")))
 
             return re.sub(re.escape(match.group()), value, args) \
                 if isinstance(value, str) else value
@@ -68,8 +68,12 @@ class Deployment:
             raise Exception(
                 f"{node_name} is missing workflow tags.")
 
-        node.setdefault("name", node_name)
+        if rhasattr(node, "args") and rgetattr(node, 'args') is None:
+            raise f"args should not be none for {node_name}"
+
         node.setdefault("args", {})
+        node.setdefault("secret", False)
+        node.setdefault("name", node_name)
         node.setdefault("depends_on", [])
 
         seen.add(node_name)
@@ -112,20 +116,17 @@ class Deployment:
             self.execute(node)
 
     def execute(self, node):
-        node_name = rgetattr(node, "name")
         node_args = rgetattr(node, "args")
+        node_name = rgetattr(node, "name")
+        node_secret = rgetattr(node, "secret")
         node_client = rgetattr(self.clients, rgetattr(node, "client"))
         resource_name, action_name = node_name.split(".")
 
         if self.verbose:
             print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
-
         try:
             args = self.cache.resolve(node_args)
             action = rgetattr(node_client, action_name)
-
-            if args is None:
-                raise f"args is none for {node_name}"
 
             if isinstance(args, list):
                 value = action(*args)
@@ -135,7 +136,7 @@ class Deployment:
             if isinstance(value, types.GeneratorType):
                 value = list(value)  # auto unpack generators
 
-            if self.verbose:
+            if self.verbose and not node_secret:
                 self.print_status(value, Colors.OKGREEN)
 
             rsetattr(

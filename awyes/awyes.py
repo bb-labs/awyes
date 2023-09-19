@@ -7,15 +7,11 @@ import argparse
 import pathlib
 import importlib
 import importlib.util
+import awyes.deploy
+import awyes.clients
 
-from .deploy import Deployment
 
-USER_CLIENT_NAME = "USER_CLIENT_NAME"
-
-# IDEA 1: Dynamic Imports
-# IDEA 2: Simplify yaml input
-# IDEA 3: User-specified clients. And simplification
-# IDEA 4: Run the main script here
+USER_CLIENT_NAME = "user"
 
 
 def main():
@@ -54,12 +50,23 @@ def main():
             config = yaml.safe_load(config)
 
     # Resolve the clients
-    clients = [getattr(boto3, 'client')]
+    clients = {
+        "awyes": awyes.clients,
+        "iam": boto3.client('iam'),
+        "s3": boto3.client("s3"),
+        "ecr": boto3.client("ecr"),
+        "sts": boto3.client("sts"),
+        "rds": boto3.client("rds"),
+        "events": boto3.client("events"),
+        "lambda": boto3.client("lambda"),
+        "apigatewayv2": boto3.client('apigatewayv2'),
+        "organizations": boto3.client("organizations"),
+    }
 
-    if args.docker:
-        clients.append(docker.client.from_env())
+    if args.include_docker:
+        clients.update({"docker": docker.client.from_env()})
 
-    if args.clients:
+    try:
         user_client_path = pathlib.Path(args.clients).resolve()
 
         spec = importlib.util.spec_from_file_location(
@@ -68,10 +75,12 @@ def main():
         sys.modules[USER_CLIENT_NAME] = user_client
         spec.loader.exec_module(user_client)
 
-        clients.append(clients)
+        clients.update({USER_CLIENT_NAME: user_client})
+    except Exception:
+        print("WARNING: couldn't find clients file. Using defaults")
 
-    deployment = Deployment(args.verbose, args.preview,
-                            args.config, clients)
+    deployment = awyes.deploy.Deployment(args.verbose, args.preview,
+                                         config, clients)
     if args.action:
         deployment.one_off(args.action, args.include_deps)
     elif args.workflow:

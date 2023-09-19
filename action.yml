@@ -5,17 +5,22 @@ branding:
   icon: "thumbs-up"
   color: "white"
 inputs:
-  path:
-    description: "Path to your awyes.yml file."
+  config:
+    description: "Path to your awyes.yml config file."
     required: false
     default: "awyes.yml"
+  clients:
+    description: "Path to your awyes.py clients file."
+    required: false
+    default: "awyes.py"
   workflow:
-    description: "Workflow to run within aws yaml"
+    description: "Workflow to run within awyes.yml"
     required: true
     default: "init"
 runs:
   using: "docker"
   image: "Dockerfile"
   args:
-    - ${{ inputs.path }}
+    - ${{ inputs.config }}
+    - ${{ inputs.clients }}
     - ${{ inputs.workflow }}

@@ -6,8 +6,10 @@ Deploy infra trivially to AWS. Yas.
 
 ### Inputs
 
-- #### `path`
-  The directory containing your awyes.yml. Defaults to `./awyes.yml`.
+- #### `config`
+  The path to your awyes.yml. Defaults to `./awyes.yml`. Required
+- #### `clients`
+  The path to your clients file. Defaults to `./awyes.py`. Not required, awyes includes boto3 client by default
 - #### `workflow`
   Required. The workflow describing a subselection of nodes intended to run. Defaults to `init`.
 
@@ -16,7 +18,8 @@ Deploy infra trivially to AWS. Yas.
 ```
 uses: bb-labs/awyes@main # or pin to latest major
 with:
-  path: '/path/to/your/projects/awyes.yml'
+  config: '/path/to/your/projects/awyes.yml'
+  clients: '/path/to/your/projects/awyes.py'
   workflow: init
 ```
 
