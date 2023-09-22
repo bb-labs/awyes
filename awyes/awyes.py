@@ -35,7 +35,8 @@ def main():
                         help='The awyes workflow type')
     parser.add_argument('--config', type=str, required=False,
                         default="awyes.yml", help='Path to awyes config')
-    parser.add_argument('--clients', type=str, required=False, default="awyes.py",
+    parser.add_argument('--clients', type=str, required=False,
+                        default="awyes.py",
                         help='Path to user specified awyes clients')
     parser.add_argument('--raw', type=str, required=False, default="",
                         help='Raw config to use in place of path')
@@ -52,6 +53,7 @@ def main():
     # Resolve the clients
     clients = {
         "awyes": awyes.clients,
+        "session": boto3.session,
         "iam": boto3.client('iam'),
         "s3": boto3.client("s3"),
         "ecr": boto3.client("ecr"),
