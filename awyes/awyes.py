@@ -24,7 +24,7 @@ def main():
         '--verbose', action=argparse.BooleanOptionalAction, default=True,
         help="Enable logging")
     parser.add_argument(
-        '--include-deps', action=argparse.BooleanOptionalAction, default=False,
+        '--include-deps', action=argparse.BooleanOptionalAction, default=True,
         help="When specifying an action, whether to include dependent actions")
     parser.add_argument(
         '--include-docker', action=argparse.BooleanOptionalAction,
