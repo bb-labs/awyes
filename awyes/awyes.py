@@ -58,6 +58,7 @@ def main():
         "s3": boto3.client("s3"),
         "ec2": boto3.client("ec2"),
         "ecr": boto3.client("ecr"),
+        "eks": boto3.client("eks"),
         "sts": boto3.client("sts"),
         "rds": boto3.client("rds"),
         "events": boto3.client("events"),
