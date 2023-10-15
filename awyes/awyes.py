@@ -56,6 +56,7 @@ def main():
         "session": boto3.session,
         "iam": boto3.client('iam'),
         "s3": boto3.client("s3"),
+        "ec2": boto3.client("ec2"),
         "ecr": boto3.client("ecr"),
         "sts": boto3.client("sts"),
         "rds": boto3.client("rds"),
