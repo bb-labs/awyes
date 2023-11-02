@@ -10,7 +10,6 @@ import importlib.util
 import awyes.deploy
 import awyes.clients
 
-
 USER_CLIENT_NAME = "user"
 
 
@@ -41,7 +40,8 @@ def main():
     parser.add_argument('-r', '--raw', type=str, required=False, default="",
                         help='Raw config to use in place of path')
     parser.add_argument('-a', '--action', type=str, required=False, default="",
-                        help="A specific action to run")
+                        help="The action name to run")
+
     args = parser.parse_args()
 
     # Load the config
