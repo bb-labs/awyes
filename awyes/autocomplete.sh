@@ -37,26 +37,3 @@ workflow)
     $(yq '.[][] | select(.workflow) | .workflow' $config_path | sort | uniq | sed "s/[^[:alnum:]]//g")
   ;;
 esac
-
-# parser.add_argument(
-#     '-v', '--verbose', action=argparse.BooleanOptionalAction, default=True,
-#     help="Enable logging")
-# parser.add_argument(
-#     '-d', '--include-deps', action=argparse.BooleanOptionalAction, default=True,
-#     help="When specifying an action, whether to include dependent actions")
-# parser.add_argument(
-#     '--include-docker', action=argparse.BooleanOptionalAction,
-#     default=True,
-#     help="Include a docker client")
-
-# parser.add_argument('-w', '--workflow', type=str, required=False, default="",
-#                     help='The awyes workflow type')
-# parser.add_argument('--config', type=str, required=False,
-#                     default="awyes.yml", help='Path to awyes config')
-# parser.add_argument('--clients', type=str, required=False,
-#                     default="awyes.py",
-#                     help='Path to user specified awyes clients')
-# parser.add_argument('-r', '--raw', type=str, required=False, default="",
-#                     help='Raw config to use in place of path')
-# parser.add_argument('-a', '--action', type=str, required=False, default="",
-#                     help="The action name to run")
