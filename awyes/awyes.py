@@ -67,8 +67,10 @@ def main():
         "organizations": boto3.client("organizations"),
     }
 
-    if args.include_docker:
+    try:
         clients.update({"docker": docker.client.from_env()})
+    except Exception:
+        print("WARNING: couldn't find docker client. Using defaults")
 
     try:
         user_client_path = pathlib.Path(args.clients).resolve()
