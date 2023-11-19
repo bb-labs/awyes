@@ -124,6 +124,7 @@ class Deployment:
 
         if self.verbose:
             print(f"{Colors.OKCYAN}{node_name}{Colors.ENDC}")
+
         try:
             args = self.cache.resolve(node_args)
             action = rgetattr(node_client, action_name)
@@ -143,7 +144,6 @@ class Deployment:
                 context=self.cache,
                 accessor=f"{resource_name}.{action_name}",
                 value=value)
-
         except Exception as e:
             self.print_status(e, Colors.FAIL)
 

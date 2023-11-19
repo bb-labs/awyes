@@ -26,8 +26,8 @@ def main():
         '-d', '--include-deps', action=argparse.BooleanOptionalAction, default=True,
         help="When specifying an action, whether to include dependent actions")
     parser.add_argument(
-        '--include-docker', action=argparse.BooleanOptionalAction,
-        default=True,
+        '--must-include-docker', action=argparse.BooleanOptionalAction,
+        default=False,
         help="Include a docker client")
 
     parser.add_argument('-w', '--workflow', type=str, required=False, default="",
@@ -52,6 +52,7 @@ def main():
 
     # Resolve the clients
     clients = {
+        "env": os.environ,
         "awyes": awyes.clients,
         "session": boto3.session,
         "iam": boto3.client('iam'),
@@ -70,6 +71,9 @@ def main():
     try:
         clients.update({"docker": docker.client.from_env()})
     except Exception:
+        if args.must_include_docker:
+            raise "Docker client required but not found"
+
         print("WARNING: couldn't find docker client. Using defaults")
 
     try:
