@@ -58,7 +58,9 @@ def main():
 
     # Load the env
     dotenv.load_dotenv(os.path.normpath(args.env))
-    os.environ.update(dict(map(lambda var: var.split("="),
+
+    if args.set:
+        os.environ.update(dict(map(lambda var: var.split("="),
                                itertools.chain(*args.set))))
 
     # Resolve the clients
@@ -85,7 +87,7 @@ def main():
         if args.must_include_docker:
             raise "Docker client required but not found"
 
-        print("WARNING: couldn't find docker client.")
+        print("WARNING: couldn't find docker client. Is Docker running?")
 
     try:
         user_client_path = pathlib.Path(args.clients).resolve()
