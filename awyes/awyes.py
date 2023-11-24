@@ -1,10 +1,13 @@
+import os
+import os.path
 import sys
 import yaml
 import boto3
 import docker
-import os.path
+import dotenv
 import argparse
 import pathlib
+import itertools
 import importlib
 import importlib.util
 import awyes.deploy
@@ -32,6 +35,9 @@ def main():
 
     parser.add_argument('-w', '--workflow', type=str, required=False, default="",
                         help='The awyes workflow type')
+    parser.add_argument('-e', '--env', type=str, required=False,
+                        default=".env", help='Path to awyes env')
+    parser.add_argument('-s', '--set', action='append', nargs='+')
     parser.add_argument('--config', type=str, required=False,
                         default="awyes.yml", help='Path to awyes config')
     parser.add_argument('--clients', type=str, required=False,
@@ -49,6 +55,11 @@ def main():
     if not config:
         with open(os.path.normpath(args.config)) as config:
             config = yaml.safe_load(config)
+
+    # Load the env
+    dotenv.load_dotenv(os.path.normpath(args.env))
+    os.environ.update(dict(map(lambda var: var.split("="),
+                               itertools.chain(*args.set))))
 
     # Resolve the clients
     clients = {
@@ -74,7 +85,7 @@ def main():
         if args.must_include_docker:
             raise "Docker client required but not found"
 
-        print("WARNING: couldn't find docker client. Using defaults")
+        print("WARNING: couldn't find docker client.")
 
     try:
         user_client_path = pathlib.Path(args.clients).resolve()

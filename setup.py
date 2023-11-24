@@ -13,6 +13,7 @@ setup(
         'boto3',
         'docker',
         'pyyaml',
+        'python-dotenv'
     ],
     entry_points={'console_scripts': ['awyes=awyes.awyes:main']},
     classifiers=[
