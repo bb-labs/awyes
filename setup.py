@@ -10,10 +10,9 @@ setup(
     url='https://github.com/bb-labs/awyes',
     packages=find_packages(),
     install_requires=[
-        'boto3',
-        'docker',
         'pyyaml',
-        'python-dotenv'
+        'python-dotenv',
+        'pipreqs',
     ],
     entry_points={'console_scripts': ['awyes=awyes.awyes:main']},
     classifiers=[

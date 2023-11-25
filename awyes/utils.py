@@ -31,19 +31,7 @@ def rgetattr(context, accessor):
     a = accessor
     keys = a if isinstance(a, list) else filter(None, a.split('.'))
 
-    return reduce(
-        lambda result, key: subscript(result, key),
-        keys,
-        context
-    )
-
-
-def rhasattr(context, accessor):
-    try:
-        _ = rgetattr(context, accessor)
-        return True
-    except Exception:
-        return False
+    return reduce(lambda result, key: subscript(result, key), keys, context)
 
 
 def rsetattr(context, accessor, value):

@@ -2,21 +2,61 @@ import os
 import os.path
 import sys
 import yaml
-import boto3
-import docker
 import dotenv
 import argparse
 import pathlib
 import itertools
+import subprocess
 import importlib
 import importlib.util
+import pipreqs.pipreqs
 import awyes.deploy
-import awyes.clients
 
 USER_CLIENT_NAME = "user"
 
 
-def main():
+def load_config(config_path):
+    with open(os.path.normpath(config_path)) as config:
+        config, workflows = yaml.safe_load_all(
+            os.path.expandvars(config.read()))
+
+    return config, workflows
+
+
+def load_env(env_path, overrides):
+    dotenv.load_dotenv(os.path.normpath(env_path))
+    if overrides:
+        os.environ.update(dict(map(lambda var: var.split("="),
+                               itertools.chain(*overrides))))
+
+
+def inject_clients(client_path):
+    user_client_path = pathlib.Path(client_path).resolve()
+
+    # Figure out / install the requirements from user provided script
+    requirements = pipreqs.pipreqs.get_pkg_names(
+        pipreqs.pipreqs.get_all_imports(user_client_path.parent))
+
+    subprocess.run([sys.executable, "-m", "pip", "install", *requirements],
+                   stdout=subprocess.DEVNULL, check=True)
+
+    # Inject the user provided clients into sys.modules
+    spec = importlib.util.spec_from_file_location(
+        USER_CLIENT_NAME, user_client_path)
+    user_client = importlib.util.module_from_spec(spec)
+    sys.modules[USER_CLIENT_NAME] = user_client
+    spec.loader.exec_module(user_client)
+
+    return sys.modules[USER_CLIENT_NAME]
+
+
+def get_actions(config, workflow):
+    return [[action_label] if isinstance(action_label, dict)
+            else [{action_name: action} for action_name, action in config.items() if action_label in action_name]
+            for action_label in workflow]
+
+
+def get_arguments():
     parser = argparse.ArgumentParser(description='Create an awyes deployment')
 
     parser.add_argument(
@@ -25,91 +65,50 @@ def main():
     parser.add_argument(
         '-v', '--verbose', action=argparse.BooleanOptionalAction, default=True,
         help="Enable logging")
-    parser.add_argument(
-        '-d', '--include-deps', action=argparse.BooleanOptionalAction, default=True,
-        help="When specifying an action, whether to include dependent actions")
-    parser.add_argument(
-        '--must-include-docker', action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Include a docker client")
-
-    parser.add_argument('-w', '--workflow', type=str, required=False, default="",
-                        help='The awyes workflow type')
-    parser.add_argument('-e', '--env', type=str, required=False,
-                        default=".env", help='Path to awyes env')
+    parser.add_argument('-w', '--workflow', type=str,
+                        required=True, help='The workflow type')
     parser.add_argument('-s', '--set', action='append', nargs='+')
+    parser.add_argument('-e', '--env', type=str, required=False,
+                        default=".env", help='Path to env')
     parser.add_argument('--config', type=str, required=False,
-                        default="awyes.yml", help='Path to awyes config')
+                        default="awyes.yml", help='Path to config')
     parser.add_argument('--clients', type=str, required=False,
                         default="awyes.py",
-                        help='Path to user specified awyes clients')
-    parser.add_argument('-r', '--raw', type=str, required=False, default="",
-                        help='Raw config to use in place of path')
-    parser.add_argument('-a', '--action', type=str, required=False, default="",
-                        help="The action name to run")
+                        help='Path to user specified clients')
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    # Load the config
-    config = yaml.safe_load(args.raw)
-    if not config:
-        with open(os.path.normpath(args.config)) as config:
-            config = yaml.safe_load(config)
+
+def main():
+    # Get the cli arguments
+    args = get_arguments()
 
     # Load the env
-    dotenv.load_dotenv(os.path.normpath(args.env))
-
-    if args.set:
-        os.environ.update(dict(map(lambda var: var.split("="),
-                               itertools.chain(*args.set))))
-
-    # Resolve the clients
-    clients = {
-        "env": os.environ,
-        "awyes": awyes.clients,
-        "session": boto3.session,
-        "iam": boto3.client('iam'),
-        "s3": boto3.client("s3"),
-        "ec2": boto3.client("ec2"),
-        "ecr": boto3.client("ecr"),
-        "eks": boto3.client("eks"),
-        "sts": boto3.client("sts"),
-        "rds": boto3.client("rds"),
-        "events": boto3.client("events"),
-        "lambda": boto3.client("lambda"),
-        "apigatewayv2": boto3.client('apigatewayv2'),
-        "organizations": boto3.client("organizations"),
-    }
-
     try:
-        clients.update({"docker": docker.client.from_env()})
-    except Exception:
-        if args.must_include_docker:
-            raise "Docker client required but not found"
+        load_env(args.env, args.set)
+    except:
+        print(f"WARNING: could not load env {args.env}, using system env.")
 
-        print("WARNING: couldn't find docker client. Is Docker running?")
-
+    # Load the config
     try:
-        user_client_path = pathlib.Path(args.clients).resolve()
+        config, workflows = load_config(args.config)
+    except:
+        raise "couldn't parse config. You must pass a two part yaml file: the first part: config, the second part: workflows."
 
-        spec = importlib.util.spec_from_file_location(
-            USER_CLIENT_NAME, user_client_path)
-        user_client = importlib.util.module_from_spec(spec)
-        sys.modules[USER_CLIENT_NAME] = user_client
-        spec.loader.exec_module(user_client)
+    # Validate workflow
+    if not workflows.get(args.workflow):
+        raise "couldn't find workflow {} in config.".format(args.workflow)
 
-        clients.update({USER_CLIENT_NAME: user_client})
+    # Inject the user provided clients
+    try:
+        clients = inject_clients(args.clients)
     except Exception:
-        print("WARNING: couldn't find clients file. Using defaults")
+        raise "couldn't find any provided clients at: {}.".format(args.clients)
 
-    deployment = awyes.deploy.Deployment(args.verbose, args.preview,
-                                         config, clients)
-    if args.action:
-        deployment.one_off(args.action, args.include_deps)
-    elif args.workflow:
-        deployment.deploy(args.workflow)
-    else:
-        raise "Please pass either a workflow tag or an action"
+    # Create and run the deployment
+    actions = get_actions(config, workflows.get(args.workflow))
+    awyes.deploy.Deployment(args.verbose, args.preview,
+                            config, clients).run(itertools.chain(*actions))
 
 
 if __name__ == '__main__':
