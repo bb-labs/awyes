@@ -11,7 +11,11 @@
 - #### `clients`
   The path to your clients file. Defaults to `./awyes.py`. Defaults to `awyes.py`. Required
 - #### `workflow`
-  The workflow describing a subselection of nodes intended to run. Defaults to `init`. Required. 
+  The workflow describing a subselection of nodes intended to run. Defaults to `init`. Required.
+- #### `env`
+  The env file describing env you wish to include your workflows. Defaults to `.env`. Optional.
+- #### `set`
+  env overrides, useful for passwords, etc. Optional.
 
 ### Usage
 
