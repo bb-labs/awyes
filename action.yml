@@ -13,6 +13,10 @@ inputs:
     description: Path to your awyes.py clients file.
     required: false
     default: awyes.py
+  deps:
+    description: Path to your awyes.py deps file.
+    required: false
+    default: awyes.txt
   env:
     description: Env within awyes.yml
     required: false
@@ -26,5 +30,6 @@ runs:
   args:
     - ${{ inputs.config }}
     - ${{ inputs.clients }}
+    - ${{ inputs.deps }}
     - ${{ inputs.env }}
     - ${{ inputs.workflow }}

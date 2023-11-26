@@ -7,29 +7,31 @@
 ### Inputs
 
 - #### `config`
-  The path to your awyes.yml. Defaults to `./awyes.yml`. Defaults to `awyes.yml`. Required
+  The path to your awyes.yml. Defaults to `awyes.yml`. Optional.
 - #### `clients`
-  The path to your clients file. Defaults to `./awyes.py`. Defaults to `awyes.py`. Required
-- #### `workflow`
-  The workflow describing a subselection of nodes intended to run. Defaults to `init`. Required.
+  The path to your clients file. Defaults to `awyes.py`. Optional.
+- #### `deps`
+  The path to your deps file. Defaults to `awyes.txt`. Optional.
 - #### `env`
   The env file describing env you wish to include your workflows. Defaults to `.env`. Optional.
-- #### `set`
-  env overrides, useful for passwords, etc. Optional.
+- #### `workflow`
+  The workflow describing a subselection of nodes intended to run. Required.
 
 ### Usage
 
 ```
 uses: bb-labs/awyes@main # or pin to latest major
 with:
-  config: '/path/to/your/projects/awyes.yml'
-  clients: '/path/to/your/projects/awyes.py'
+  config: '/path/to/your/project/awyes.yml'
+  clients: '/path/to/your/project/awyes.py'
+  deps: '/path/to/your/project/awyes.txt'
   workflow: init
 ```
 
 ## First the clients `awyes.py`
 
 Any clients you import will be automagically interpreted and installed by awyes. For every `action` (function) you wish to leverage in `awyes.yml`, you'll need to provide an export for. User-provided clients must go in a dict called `user`.
+
 ```
 import os
 import boto3
@@ -87,8 +89,11 @@ eks = boto3.client('eks')
 docker = docker.client.from_env()
 
 ```
+
 ## An `awyes.yml` file
+
 The format of an `action` (backed by functions in the awyes.py file) is `<namespace>.<action_name>.<fn_name>.<metatag>`. The `metatag` is optional, and used solely to differentiate between otherwise identically named `action`s.
+
 ```
 image.docker.build:
   tag: ${DOCKER_REGISTRY}/${APP_REPO}
@@ -109,10 +114,10 @@ node_role.iam.create_role:
       "Version": "2012-10-17",
       "Statement": [{
         "Effect": "Allow",
-        "Principal": { 
+        "Principal": {
           "Service": [
             "ec2.amazonaws.com"
-          ] 
+          ]
         },
         "Action": "sts:AssumeRole"
       }]
@@ -137,12 +142,12 @@ cluster_role.iam.create_role:
       "Version": "2012-10-17",
       "Statement": [{
         "Effect": "Allow",
-        "Principal": { 
+        "Principal": {
           "Service": [
-            "lambda.amazonaws.com", 
+            "lambda.amazonaws.com",
             "rds.amazonaws.com",
             "eks.amazonaws.com"
-          ] 
+          ]
         },
         "Action": "sts:AssumeRole"
       }]
