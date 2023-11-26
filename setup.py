@@ -12,7 +12,6 @@ setup(
     install_requires=[
         'pyyaml',
         'python-dotenv',
-        'pipreqs',
     ],
     entry_points={'console_scripts': ['awyes=awyes.awyes:main']},
     classifiers=[

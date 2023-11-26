@@ -9,7 +9,6 @@ import itertools
 import subprocess
 import importlib
 import importlib.util
-import pipreqs.pipreqs
 import awyes.deploy
 
 USER_CLIENT_NAME = "user"
@@ -30,19 +29,16 @@ def load_env(env_path, overrides):
                                itertools.chain(*overrides))))
 
 
-def inject_clients(client_path, verbose):
-    user_client_path = pathlib.Path(client_path).resolve()
-
-    # Figure out / install the requirements from user provided script
-    requirements = pipreqs.pipreqs.get_pkg_names(
-        pipreqs.pipreqs.get_all_imports(user_client_path.parent))
-
-    subprocess.run(["pip", "install", *requirements],
-                   stdout=subprocess.DEVNULL if not verbose else None, check=True)
+def inject_clients(client_path, client_deps_path, verbose):
+    # Install the requirements from user provided script
+    with open(client_deps_path) as client_deps:
+        deps = [dep.rstrip() for dep in client_deps]
+        subprocess.run(["pip", "install", *deps],
+                       stdout=subprocess.DEVNULL if not verbose else None, check=True)
 
     # Inject the user provided clients into sys.modules
     spec = importlib.util.spec_from_file_location(
-        USER_CLIENT_NAME, user_client_path)
+        USER_CLIENT_NAME, pathlib.Path(client_path).resolve())
     user_client = importlib.util.module_from_spec(spec)
     sys.modules[USER_CLIENT_NAME] = user_client
     spec.loader.exec_module(user_client)
@@ -75,6 +71,9 @@ def get_arguments():
     parser.add_argument('--clients', type=str, required=False,
                         default="awyes.py",
                         help='Path to user specified clients')
+    parser.add_argument('-d', '--deps', type=str, required=False,
+                        default="awyes.txt",
+                        help='Path to user specified deps for clients')
 
     return parser.parse_args()
 
@@ -101,7 +100,7 @@ def main():
 
     # Inject the user provided clients
     try:
-        clients = inject_clients(args.clients, args.verbose)
+        clients = inject_clients(args.clients, args.deps, args.verbose)
     except Exception:
         raise "couldn't find any provided clients at: {}.".format(args.clients)
 
