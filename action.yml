@@ -1,26 +1,30 @@
 # action.yml
-name: "awyes"
-description: "Deploy infra trivially to AWS. Yas."
+name: awyes
+description: Deploy infra trivially. Yas.
 branding:
-  icon: "thumbs-up"
-  color: "white"
+  icon: thumbs-up
+  color: white
 inputs:
   config:
-    description: "Path to your awyes.yml config file."
+    description: Path to your awyes.yml config file.
     required: false
-    default: "awyes.yml"
+    default: awyes.yml
   clients:
-    description: "Path to your awyes.py clients file."
+    description: Path to your awyes.py clients file.
     required: false
-    default: "awyes.py"
+    default: awyes.py
+  env:
+    description: Env within awyes.yml
+    required: false
+    default: .env
   workflow:
-    description: "Workflow to run within awyes.yml"
+    description: Workflow to run within awyes.yml
     required: true
-    default: "init"
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: docker
+  image: Dockerfile
   args:
     - ${{ inputs.config }}
     - ${{ inputs.clients }}
+    - ${{ inputs.env }}
     - ${{ inputs.workflow }}
