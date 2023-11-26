@@ -96,13 +96,13 @@ def main():
 
     # Validate workflow
     if not workflows.get(args.workflow):
-        raise "couldn't find workflow {} in config.".format(args.workflow)
+        raise ValueError(f"couldn't find workflow {args.workflow} in config.")
 
     # Inject the user provided clients
     try:
         clients = inject_clients(args.clients, args.deps, args.verbose)
-    except Exception:
-        raise "couldn't find any provided clients at: {}.".format(args.clients)
+    except:
+        raise ValueError(f"couldn't find any clients at: {args.clients}")
 
     # Create and run the deployment
     actions = get_actions(config, workflows.get(args.workflow))
