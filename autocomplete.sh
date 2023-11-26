@@ -6,6 +6,7 @@ _arguments \
   '--env[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
   '--workflow[run a particular workflow]:workflow_name:->workflow' \
+  '--action[run a particular action]:action_name:->action' \
   '*--set[override or set and env variable]:env_variable:->set'=asdfsdf
 
 function validate_path {
@@ -29,5 +30,9 @@ case $state in
 workflow)
   validate_path "./awyes.yml" && _values 'awyes workflows' \
     $(yq 'select(document_index == 1) | keys | .[]' $valid_path)
+  ;;
+action)
+  validate_path "./awyes.yml" && _values 'awyes workflows' \
+    $(yq 'select(document_index == 0) | keys | .[]' $valid_path)
   ;;
 esac

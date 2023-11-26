@@ -12,8 +12,7 @@ class Deployment:
     CACHE_REGEX = "\$\((?P<reference>.*?)\)"
 
     def __init__(self, verbose, preview, config, clients):
-        self.cache = collections.defaultdict(
-            lambda: collections.defaultdict(dict))
+        self.cache = collections.defaultdict(lambda: collections.defaultdict(dict))
 
         self.config = config
         self.clients = clients
@@ -30,11 +29,13 @@ class Deployment:
             self.execute(action)
 
     def resolve(self, args):
-        return json.loads(re.sub(
-            Deployment.CACHE_REGEX,
-            lambda m: rgetattr(self.cache, m.group(Deployment.MATCH_REF)),
-            json.dumps(args, sort_keys=True)
-        ))
+        return json.loads(
+            re.sub(
+                Deployment.CACHE_REGEX,
+                lambda m: rgetattr(self.cache, m.group(Deployment.MATCH_REF)),
+                json.dumps(args, sort_keys=True),
+            )
+        )
 
     def execute(self, action):
         # e.g. <namespace>.<client>.<fn>.<optional meta tag>
@@ -80,6 +81,10 @@ class Deployment:
         print()
 
     def print_status(self, value, status, indicator):
-        print(textwrap.indent(json.dumps(value, indent=2, default=str),
-                              f"{status}{indicator} {Colors.ENDC}",
-                              lambda _: True))
+        print(
+            textwrap.indent(
+                json.dumps(value, indent=2, default=str),
+                f"{status}{indicator} {Colors.ENDC}",
+                lambda _: True,
+            )
+        )

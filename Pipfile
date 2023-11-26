@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-awyes = {editable = true, path = "."}
+awyes = {file = ".", editable = true}
 
 [scripts]
 patch = "gh workflow run 'Python Package Release'"
