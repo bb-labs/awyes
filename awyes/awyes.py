@@ -30,15 +30,15 @@ def load_env(env_path, overrides):
                                itertools.chain(*overrides))))
 
 
-def inject_clients(client_path):
+def inject_clients(client_path, verbose):
     user_client_path = pathlib.Path(client_path).resolve()
 
     # Figure out / install the requirements from user provided script
     requirements = pipreqs.pipreqs.get_pkg_names(
         pipreqs.pipreqs.get_all_imports(user_client_path.parent))
 
-    subprocess.run([sys.executable, "-m", "pip", "install", *requirements],
-                   stdout=subprocess.DEVNULL, check=True)
+    subprocess.run(["pip", "install", *requirements],
+                   stdout=subprocess.DEVNULL if not verbose else None, check=True)
 
     # Inject the user provided clients into sys.modules
     spec = importlib.util.spec_from_file_location(
@@ -101,7 +101,7 @@ def main():
 
     # Inject the user provided clients
     try:
-        clients = inject_clients(args.clients)
+        clients = inject_clients(args.clients, args.verbose)
     except Exception:
         raise "couldn't find any provided clients at: {}.".format(args.clients)
 
