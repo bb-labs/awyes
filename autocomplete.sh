@@ -6,7 +6,7 @@ _arguments \
   '--env[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
   '--workflow[run a particular workflow]:workflow_name:->workflow' \
-  '*--set[override or set and env variable]:env_variable:->set'=
+  '*--set[override or set and env variable]:env_variable:->set'=asdfsdf
 
 function validate_path {
   if eval realpath $1 >/dev/null 2>/dev/null; then

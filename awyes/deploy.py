@@ -38,8 +38,8 @@ class Deployment:
 
     def execute(self, action):
         # e.g. <namespace>.<client>.<fn>.<optional meta tag>
-        namespace, client_name, fn_name, *meta = next(iter(action)).split(".")
-        id = f"{namespace}.{client_name}.{fn_name}" + (meta[0] if meta else "")
+        name, client_name, fn_name, *tag = next(iter(action)).split(".")
+        id = f"{name}.{client_name}.{fn_name}" + (f".{tag[0]}" if tag else "")
 
         if self.verbose:
             print(f"{Colors.OKCYAN}{id}{Colors.ENDC}")
