@@ -2,10 +2,10 @@
 
 _arguments \
   '--config[path to awyes config]:filename:_files' \
+  '--clients[path to awyes clients]:filename:_files' \
   '--env[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
   '--workflow[run a particular workflow]:workflow_name:->workflow' \
-  '--action[name of one-off action to run]:action_name:->action' \
   '*--set[override or set and env variable]:env_variable:->set'=
 
 function validate_path {
@@ -26,12 +26,8 @@ function validate_path {
 }
 
 case $state in
-action)
-  validate_path "./awyes.yml" && _values 'awyes actions' \
-    $(yq 'to_entries | .[] | .key + "." + (.value | keys | .[])' $valid_path)
-  ;;
 workflow)
   validate_path "./awyes.yml" && _values 'awyes workflows' \
-    $(yq '.[][] | select(.workflow) | .workflow' $valid_path | sort | uniq | sed "s/[^[:alnum:]]//g")
+    $(yq 'select(document_index == 1) | keys | .[]' $valid_path)
   ;;
 esac
