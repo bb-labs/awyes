@@ -12,7 +12,7 @@ class Deployment:
     CACHE_REGEX = "\$\((?P<reference>.*?)\)"
 
     def __init__(self, verbose, preview, config, clients):
-        self.cache = collections.defaultdict(lambda: collections.defaultdict(dict))
+        self.cache = (nested_dict := lambda: collections.defaultdict(nested_dict))()
 
         self.config = config
         self.clients = clients
