@@ -138,7 +138,7 @@ def main():
     if args.workflow and not workflows.get(args.workflow):
         raise ValueError(f"couldn't find workflow {args.workflow} in config.")
 
-    if args.action and not config.get(args.action):
+    if args.action and not args.action in config:
         raise ValueError(f"couldn't find action {args.action} in config.")
 
     # Inject the user provided clients
