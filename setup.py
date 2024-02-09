@@ -9,11 +9,7 @@ setup(
     description="A package for easy setup and management of resources on AWS",
     url="https://github.com/bb-labs/awyes",
     packages=find_packages(),
-    install_requires=[
-        "pyyaml",
-        "python-dotenv",
-        "pip",
-    ],
+    install_requires=["pyyaml", "python-dotenv", "pip", "pipfile"],
     entry_points={"console_scripts": ["awyes=awyes.awyes:main"]},
     classifiers=[
         "Development Status :: 3 - Alpha",

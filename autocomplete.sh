@@ -5,9 +5,8 @@ _arguments \
   '--clients[path to awyes clients]:filename:_files' \
   '--env[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
-  '--workflow[run a particular workflow]:workflow_name:->workflow' \
   '--action[run a particular action]:action_name:->action' \
-  '*--set[override or set and env variable]:env_variable:->set'=asdfsdf
+  '*--set[override or set and env variable]:env_variable:->set'
 
 function validate_path {
   if eval realpath $1 >/dev/null 2>/dev/null; then
@@ -27,12 +26,8 @@ function validate_path {
 }
 
 case $state in
-workflow)
-  validate_path "./awyes.yml" && _values 'awyes workflows' \
-    $(yq 'select(document_index == 1) | keys | .[]' $valid_path)
-  ;;
 action)
   validate_path "./awyes.yml" && _values 'awyes workflows' \
-    $(yq 'select(document_index == 0) | keys | .[]' $valid_path)
+    $(yq 'select(.) | keys | .[]' $valid_path | grep "[^---]")
   ;;
 esac

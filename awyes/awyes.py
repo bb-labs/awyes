@@ -1,41 +1,39 @@
+import re
 import os
 import os.path
 import sys
 import yaml
 import dotenv
 import argparse
+import pipfile
 import pathlib
-import itertools
 import subprocess
+import collections
 import importlib
 import importlib.util
 import awyes.deploy
+
 
 USER_CLIENT_NAME = "user"
 
 
 def load_config(config_path):
     with open(os.path.normpath(config_path)) as config:
-        config, workflows = yaml.safe_load_all(os.path.expandvars(config.read()))
-
-    return config, workflows
-
-
-def load_env(env_path, overrides):
-    dotenv.load_dotenv(os.path.normpath(env_path))
-    if overrides:
-        os.environ.update(
-            dict(map(lambda var: var.split("="), itertools.chain(*overrides)))
+        return dict(
+            collections.ChainMap(*yaml.safe_load_all(os.path.expandvars(config.read())))
         )
 
 
-def inject_clients(client_path, client_deps_path, verbose):
-    # Install the requirements from user provided script
-    with open(client_deps_path) as client_deps:
-        deps = [dep.rstrip() for dep in client_deps]
+def load_env(env_path):
+    return dotenv.load_dotenv(os.path.normpath(env_path))
+
+
+def load_clients(client_path, pipfile_path):
+    # Install the requirements from the user's pipfile
+    for dep in pipfile.load(pipfile_path).data["default"]:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", *deps],
-            stdout=subprocess.DEVNULL if not verbose else None,
+            [sys.executable, "-m", "pip", "install", dep],
+            stdout=subprocess.DEVNULL,
             check=True,
         )
 
@@ -50,54 +48,46 @@ def inject_clients(client_path, client_deps_path, verbose):
     return sys.modules[USER_CLIENT_NAME]
 
 
-def get_actions(config, workflow, action):
-    if action:
-        return [[{action: config.get(action)}]]
-
+def get_actions(config, regexes):
     return [
-        [action_label]
-        if isinstance(action_label, dict)
-        else [
-            {action_name: action}
-            for action_name, action in config.items()
-            if action_label in action_name
-        ]
-        for action_label in workflow
+        action
+        for regex in regexes
+        for action in config.keys()
+        if re.search(regex, action)
     ]
 
 
 def get_arguments():
-    parser = argparse.ArgumentParser(description="Create an awyes deployment")
+    parser = argparse.ArgumentParser(description="Run awyes actions")
 
     parser.add_argument(
         "-p",
         "--preview",
         action=argparse.BooleanOptionalAction,
         default=False,
-        help="Whether or not to execute the plan",
+        help="Preview the actions without running them",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Enable logging",
+        help="Print verbose output",
     )
-    parser.add_argument(
-        "-a", "--action", type=str, required=False, help="The action to run"
-    )
-    parser.add_argument(
-        "-w", "--workflow", type=str, required=False, help="The workflow type"
-    )
-    parser.add_argument("-s", "--set", action="append", nargs="+")
     parser.add_argument(
         "-e", "--env", type=str, required=False, default=".env", help="Path to env"
     )
     parser.add_argument(
-        "--config", type=str, required=False, default="awyes.yml", help="Path to config"
+        "-g",
+        "--config-path",
+        type=str,
+        required=False,
+        default="awyes.yml",
+        help="Path to config",
     )
     parser.add_argument(
-        "--clients",
+        "-l",
+        "--client-path",
         type=str,
         required=False,
         default="awyes.py",
@@ -105,11 +95,14 @@ def get_arguments():
     )
     parser.add_argument(
         "-d",
-        "--deps",
+        "--pipfile-path",
         type=str,
         required=False,
-        default="awyes.txt",
-        help="Path to user specified deps for clients",
+        default="Pipfile",
+        help="Path to user pipfile",
+    )
+    parser.add_argument(
+        "actions", type=str, metavar="N", nargs="+", help="The actions to run"
     )
 
     return parser.parse_args()
@@ -121,36 +114,22 @@ def main():
 
     # Load the env
     try:
-        load_env(args.env, args.set)
+        load_env(args.env)
     except:
         print(f"WARNING: could not load env {args.env}, using system env.")
 
     # Load the config
-    try:
-        config, workflows = load_config(args.config)
-    except:
-        raise "couldn't parse config. You must pass a two part yaml file: the first part: config, the second part: workflows."
-
-    # Ensure mutual exclusivity of workflow and action, and that they exist
-    if (args.workflow and args.action) or (not args.workflow and not args.action):
-        raise ValueError("please specify either workflow or action, not both.")
-
-    if args.workflow and not workflows.get(args.workflow):
-        raise ValueError(f"couldn't find workflow {args.workflow} in config.")
-
-    if args.action and not args.action in config:
-        raise ValueError(f"couldn't find action {args.action} in config.")
+    config = load_config(args.config_path)
 
     # Inject the user provided clients
     try:
-        clients = inject_clients(args.clients, args.deps, args.verbose)
+        clients = load_clients(args.client_path, args.pipfile_path)
     except:
-        raise ValueError(f"couldn't find any clients at: {args.clients}")
+        raise ValueError(f"couldn't find any clients at: {args.client_path}")
 
     # Create and run the deployment
-    actions = get_actions(config, workflows.get(args.workflow), args.action)
     awyes.deploy.Deployment(args.verbose, args.preview, config, clients).run(
-        itertools.chain(*actions)
+        get_actions(config, args.actions)
     )
 
 

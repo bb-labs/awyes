@@ -37,17 +37,20 @@ class Deployment:
             )
         )
 
+    # e.g. <namespace>.<client>.<fn>.<optional meta tag>
     def execute(self, action):
-        # e.g. <namespace>.<client>.<fn>.<optional meta tag>
-        name, client_name, fn_name, *tag = next(iter(action)).split(".")
-        id = f"{name}.{client_name}.{fn_name}" + (f".{tag[0]}" if tag else "")
+        name, client_name, fn_name = action.split(".")
+        id = f"{name}.{client_name}.{fn_name}"
 
         if self.verbose:
             print(f"{Colors.OKCYAN}{id}{Colors.ENDC}")
 
         try:
-            fn = rgetattr(self.clients, f"{client_name}.{fn_name}")
-            args = self.resolve(next(iter(action.values())))
+            fn = rgetattr(
+                self.clients,
+                fn_name if client_name == "user" else f"{client_name}.{fn_name}",
+            )
+            args = self.resolve(self.config[action])
 
             if self.verbose:
                 self.print_status(args, Colors.OKBLUE, "→")
@@ -75,8 +78,8 @@ class Deployment:
 
     def summarize(self, actions):
         for action in actions:
-            print(f"{Colors.OKCYAN}{next(iter(action))}{Colors.ENDC}")
-            self.print_status(action, Colors.OKBLUE, "→")
+            print(f"{Colors.OKCYAN}{action}{Colors.ENDC}")
+            self.print_status(self.config[action], Colors.OKBLUE, "→")
 
         print()
 
