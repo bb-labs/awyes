@@ -3,10 +3,11 @@
 _arguments \
   '--config[path to awyes config]:filename:_files' \
   '--clients[path to awyes clients]:filename:_files' \
+  '--pipfile[path to awyes clients]:filename:_files' \
   '--env[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
-  '--action[run a particular action]:action_name:->action' \
-  '*--set[override or set and env variable]:env_variable:->set'
+  '*--set[override or set and env variable]:env_variable:->set' \
+  '*:action_name:->action'
 
 function validate_path {
   if eval realpath $1 >/dev/null 2>/dev/null; then
