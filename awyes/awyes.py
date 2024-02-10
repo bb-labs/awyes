@@ -29,10 +29,16 @@ def load_env(env_path):
 
 
 def load_clients(client_path, pipfile_path):
-    # Install the requirements from the user's pipfile
-    for dep in pipfile.load(pipfile_path).data["default"]:
+    # Install the user's dependencies
+    for dep, meta in pipfile.load(pipfile_path).data["default"].items():
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", dep],
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                f"git+{meta['git']}" if "git" in meta else dep,
+            ],
             stdout=subprocess.DEVNULL,
             check=True,
         )
@@ -114,9 +120,9 @@ def main():
 
     # Load the env
     try:
-        load_env(args.env)
+        load_env(args.env_path)
     except:
-        print(f"WARNING: could not load env {args.env}, using system env.")
+        print(f"WARNING: could not load env {args.env_path}, using system env.")
 
     # Load the config
     config = load_config(args.config_path)
