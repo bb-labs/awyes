@@ -27,5 +27,5 @@ jobs:
         with:
           package_name: awyes
           bump_type: ${{ inputs.bump }}
-          pypi_username: trumanpurnell
+          pypi_username: __token__
           pypi_password: ${{ secrets.PYPI_PASSWORD }}
