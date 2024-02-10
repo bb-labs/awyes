@@ -75,7 +75,7 @@ def get_arguments():
         help="Print verbose output",
     )
     parser.add_argument(
-        "-e", "--env", type=str, required=False, default=".env", help="Path to env"
+        "-e", "--env-path", type=str, required=False, default=".env", help="Path to env"
     )
     parser.add_argument(
         "-g",

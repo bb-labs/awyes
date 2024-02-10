@@ -1,7 +1,7 @@
 #!/bin/bash
 
-awyes --config /github/workspace/$1 \
-  --clients /github/workspace/$2 \
-  --deps /github/workspace/$3 \
-  --env /github/workspace/$4 \
-  --workflow $5
+awyes --config-path /github/workspace/$1 \
+  --client-path /github/workspace/$2 \
+  --pipfile-path /github/workspace/$3 \
+  --env-path /github/workspace/$4 \
+  $5

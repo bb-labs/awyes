@@ -1,12 +1,12 @@
 #compdef awyes
 
 _arguments \
-  '--config[path to awyes config]:filename:_files' \
-  '--clients[path to awyes clients]:filename:_files' \
-  '--pipfile[path to pipfile for packages]:filename:_files' \
-  '--env[path to env file]:filename:_files' \
+  '--config-path[path to awyes config]:filename:_files' \
+  '--client-path[path to awyes clients]:filename:_files' \
+  '--pipfile-path[path to pipfile for packages]:filename:_files' \
+  '--env-path[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
-  '*--set[override or set and env variable]:env_variable:->set' \
+  '--verbose[dry run the actions]' \
   '*:action_name:->action'
 
 function validate_path {

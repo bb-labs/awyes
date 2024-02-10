@@ -1,6 +1,6 @@
 # action.yml
 name: awyes
-description: Deploy infra trivially. Yas.
+description: Run CI. Yas.
 branding:
   icon: thumbs-up
   color: white
@@ -14,15 +14,15 @@ inputs:
     required: false
     default: awyes.py
   deps:
-    description: Path to your awyes.py deps file.
+    description: Path to your Pipfile.
     required: false
-    default: awyes.txt
+    default: Pipfile
   env:
     description: Env within awyes.yml
     required: false
     default: .env
-  workflow:
-    description: Workflow to run within awyes.yml
+  action:
+    description: Regex matching action(s) to run.
     required: true
 runs:
   using: docker
@@ -32,4 +32,4 @@ runs:
     - ${{ inputs.clients }}
     - ${{ inputs.deps }}
     - ${{ inputs.env }}
-    - ${{ inputs.workflow }}
+    - ${{ inputs.action }}
