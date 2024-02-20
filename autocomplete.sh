@@ -6,6 +6,7 @@ _arguments \
   '--pipfile-path[path to pipfile for packages]:filename:_files' \
   '--env-path[path to env file]:filename:_files' \
   '--preview[dry run the actions]' \
+  '--recursive[execute dependent actions first]' \
   '--verbose[print the results of the workflow]' \
   '*:action_name:->action'
 

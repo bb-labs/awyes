@@ -81,6 +81,13 @@ def get_arguments():
         help="Print verbose output",
     )
     parser.add_argument(
+        "-r",
+        "--recursive",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Find and run all dependent actions recursively",
+    )
+    parser.add_argument(
         "-e", "--env-path", type=str, required=False, default=".env", help="Path to env"
     )
     parser.add_argument(
@@ -134,7 +141,7 @@ def main():
         raise ValueError(f"couldn't find any clients at: {args.client_path}")
 
     # Create and run the deployment
-    awyes.deploy.Deployment(args.verbose, args.preview, config, clients).run(
+    awyes.deploy.Deployment(args, config, clients).run(
         get_actions(config, args.actions)
     )
 
