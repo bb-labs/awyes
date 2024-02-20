@@ -120,6 +120,7 @@ class Deployment:
         except Exception as e:
             self.print_status("Could not execute function", Colors.FAIL, "✗")
             self.print_status(e, Colors.FAIL, "✗")
+            return
 
         # If the action is verbose, print the result
         if self.flags.verbose:
@@ -131,3 +132,4 @@ class Deployment:
         except Exception as e:
             self.print_status("Could not cache result", Colors.FAIL, "✗")
             self.print_status(e, Colors.FAIL, "✗")
+            return
