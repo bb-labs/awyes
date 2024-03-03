@@ -57,8 +57,8 @@ class Deployment:
     def execute(self, action, seen=set()):
         """Execute an action."""
         # Split the action into its components
-        name, client_name, fn_name = action.split(".")
-        id = f"{name}.{client_name}.{fn_name}"
+        *ns, client_name, fn_name = action.split(".")
+        id = f"{'.'.join(ns)}.{client_name}.{fn_name}"
 
         # If we've already seen this action (in recursive mode), return
         if id in seen:
