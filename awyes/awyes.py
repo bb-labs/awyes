@@ -107,7 +107,7 @@ def get_arguments():
         "--path",
         type=str,
         required=False,
-        default="Pipfile",
+        default=".",
         help="Path to user pipfile",
     )
     parser.add_argument(
