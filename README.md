@@ -6,26 +6,18 @@
 
 ### Inputs
 
-- #### `config`
-  The path to your awyes.yml. Defaults to `awyes.yml`. Optional.
-- #### `clients`
-  The path to your clients file. Defaults to `awyes.py`. Optional.
-- #### `deps`
-  The path to your deps file. Defaults to `awyes.txt`. Optional.
-- #### `env`
-  The env file describing env you wish to include your workflows. Defaults to `.env`. Optional.
-- #### `workflow`
-  The workflow describing a subselection of nodes intended to run. Required.
+- #### `path`
+  The path to your awyes resources. Defaults to `.`. Optional.
+- #### `action`
+  The regexes for any actions you intend to run. Required.
 
 ### Usage
 
 ```
 uses: bb-labs/awyes@main # or pin to latest major
 with:
-  config: '/path/to/your/project/awyes.yml'
-  clients: '/path/to/your/project/awyes.py'
-  deps: '/path/to/your/project/awyes.txt'
-  workflow: init
+  path: '/path/to/your/project'
+  action: run_the_thing
 ```
 
 ## First the clients `awyes.py`

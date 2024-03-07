@@ -5,22 +5,10 @@ branding:
   icon: thumbs-up
   color: white
 inputs:
-  config:
-    description: Path to your awyes.yml config file.
+  path:
+    description: Path to your awyes resources
     required: false
-    default: awyes.yml
-  clients:
-    description: Path to your awyes.py clients file.
-    required: false
-    default: awyes.py
-  deps:
-    description: Path to your Pipfile.
-    required: false
-    default: Pipfile
-  env:
-    description: Env within awyes.yml
-    required: false
-    default: .env
+    default: .
   action:
     description: Regex matching action(s) to run.
     required: true
@@ -28,8 +16,5 @@ runs:
   using: docker
   image: Dockerfile
   args:
-    - ${{ inputs.config }}
-    - ${{ inputs.clients }}
-    - ${{ inputs.deps }}
-    - ${{ inputs.env }}
+    - ${{ inputs.path }}
     - ${{ inputs.action }}

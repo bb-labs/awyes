@@ -9,8 +9,8 @@ from .utils import rgetattr, rsetattr, Colors
 
 class Deployment:
     MATCH_REF = "reference"
-    CACHE_REGEX = "\$\((?P<reference>.*?)\)"
-    ACTION_REGEX = "^\w+\.\w+\.\w+"
+    CACHE_REGEX = r"\$\((?P<reference>.*?)\)"
+    ACTION_REGEX = r"^\w+\.\w+\.\w+"
 
     def __init__(self, flags, config, clients):
         """Initialize the deployment."""
@@ -53,26 +53,24 @@ class Deployment:
         for action in actions:
             self.execute(action)
 
-    # `action` is a str of form <namespace>.<client>.<fn>
+    # `action` is a str of form <one>.<or>.<more>.<namespaces>.<client>.<fn>
     def execute(self, action, seen=set()):
         """Execute an action."""
         # Split the action into its components
         *ns, client_name, fn_name = action.split(".")
         id = f"{'.'.join(ns)}.{client_name}.{fn_name}"
 
-        # If we've already seen this action (in recursive mode), return
+        # If we've already seen this action when recursing, return
         if id in seen:
             return
         seen.add(id)
 
-        # If the action is recursive, execute its dependencies first
-        if self.flags.recursive:
-            for dep_action in self.find_recursive_actions(self.config[action]):
-                self.execute(dep_action, seen)
+        # Execute actions recursively
+        for dep_action in self.find_recursive_actions(self.config[action]):
+            self.execute(dep_action, seen)
 
-        # If the action is verbose or preview, print the action
-        if self.flags.verbose or self.flags.preview:
-            print(f"{Colors.OKCYAN}{id}{Colors.ENDC}")
+        # Print the action
+        print(f"{Colors.OKCYAN}{id}{Colors.ENDC}")
 
         # Try to get the function from the client
         try:
@@ -85,9 +83,10 @@ class Deployment:
             self.print_status(e, Colors.FAIL, "✗")
             return
 
-        # If the action is preview, print the unresolved args
-        if self.flags.preview:
-            self.print_status(self.config[action], Colors.OKBLUE, "→")
+        # If were not quiet and are dry running, print the unresolved args
+        if self.flags.dry:
+            if not self.flags.quiet:
+                self.print_status(self.config[action], Colors.OKBLUE, "→")
             return
 
         # Try to resolve the args
@@ -99,8 +98,8 @@ class Deployment:
             self.print_status(e, Colors.FAIL, "✗")
             return
 
-        # If the action is verbose, print the resolved args
-        if self.flags.verbose:
+        # If were not quiet, print the resolved args
+        if not self.flags.quiet:
             self.print_status(args, Colors.OKBLUE, "→")
 
         # Try to execute the function
@@ -122,8 +121,8 @@ class Deployment:
             self.print_status(e, Colors.FAIL, "✗")
             return
 
-        # If the action is verbose, print the result
-        if self.flags.verbose:
+        # If were not quiet, print the result
+        if not self.flags.quiet:
             self.print_status(value, Colors.OKGREEN, "✓")
 
         # Try to cache the result

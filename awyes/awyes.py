@@ -9,28 +9,42 @@ import pipfile
 import pathlib
 import subprocess
 import collections
-import importlib
 import importlib.util
 import awyes.deploy
 
-
-USER_CLIENT_NAME = "user"
-
-
-def load_config(config_path):
-    with open(os.path.normpath(config_path)) as config:
-        return dict(
-            collections.ChainMap(*yaml.safe_load_all(os.path.expandvars(config.read())))
-        )
-
-
-def load_env(env_path):
-    return dotenv.load_dotenv(os.path.normpath(env_path))
+NEW_LINE = "\n"
+USER_ENV_PATH = "*.env*"
+USER_PIPFILE_PATH = "Pipfile"
+USER_CONFIG_PATH_PREFIXES = "awyes.*"
+USER_CONFIG_PATH_SUFFIXES = (".yaml", ".yml")
+USER_CLIENT_PATH_PREFIXES = "awyes.*"
+USER_CLIENT_PATH_SUFFIXES = (".py",)
+USER_CLIENT_MODULE_NAME = "local"
 
 
-def load_clients(client_path, pipfile_path):
+def load_config(path):
+    collapse = lambda dl: dict(collections.ChainMap(*dl))
+
+    return collapse(
+        collapse(yaml.safe_load_all(os.path.expandvars(p.read_text())))
+        for p in pathlib.Path(path).resolve().rglob(USER_CONFIG_PATH_PREFIXES)
+        if p.suffix in USER_CONFIG_PATH_SUFFIXES
+    )
+
+
+def load_env(path):
+    return [
+        dotenv.load_dotenv(p) for p in pathlib.Path(path).resolve().rglob(USER_ENV_PATH)
+    ]
+
+
+def load_clients(path):
     # Install the user's dependencies
-    for dep, meta in pipfile.load(pipfile_path).data["default"].items():
+    for dep, meta in (
+        pipfile.load(pathlib.Path(os.path.join(path, USER_PIPFILE_PATH)).resolve())
+        .data["default"]
+        .items()
+    ):
         subprocess.run(
             [
                 sys.executable,
@@ -40,18 +54,26 @@ def load_clients(client_path, pipfile_path):
                 f"git+{meta['git']}" if "git" in meta else dep,
             ],
             stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             check=True,
         )
 
-    # Inject the user provided clients into sys.modules
-    spec = importlib.util.spec_from_file_location(
-        USER_CLIENT_NAME, pathlib.Path(client_path).resolve()
+    # Inject the user provided module(s) into sys.modules
+    spec = importlib.util.spec_from_loader(USER_CLIENT_MODULE_NAME, loader=None)
+    module = importlib.util.module_from_spec(spec)
+    exec(
+        NEW_LINE.join(
+            [
+                p.read_text()
+                for p in pathlib.Path(path).resolve().rglob(USER_CLIENT_PATH_PREFIXES)
+                if p.suffix in USER_CLIENT_PATH_SUFFIXES
+            ]
+        ),
+        module.__dict__,
     )
-    user_client = importlib.util.module_from_spec(spec)
-    sys.modules[USER_CLIENT_NAME] = user_client
-    spec.loader.exec_module(user_client)
-
-    return sys.modules[USER_CLIENT_NAME]
+    sys.modules[USER_CLIENT_MODULE_NAME] = module
+    globals()[USER_CLIENT_MODULE_NAME] = module
+    return sys.modules[USER_CLIENT_MODULE_NAME]
 
 
 def get_actions(config, regexes):
@@ -67,48 +89,22 @@ def get_arguments():
     parser = argparse.ArgumentParser(description="Run awyes actions")
 
     parser.add_argument(
-        "-p",
-        "--preview",
+        "-d",
+        "--dry",
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Preview the actions without running them",
     )
     parser.add_argument(
-        "-v",
-        "--verbose",
+        "-q",
+        "--quiet",
         action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Print verbose output",
+        default=False,
+        help="Only show the action names",
     )
     parser.add_argument(
-        "-r",
-        "--recursive",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Find and run all dependent actions recursively",
-    )
-    parser.add_argument(
-        "-e", "--env-path", type=str, required=False, default=".env", help="Path to env"
-    )
-    parser.add_argument(
-        "-g",
-        "--config-path",
-        type=str,
-        required=False,
-        default="awyes.yml",
-        help="Path to config",
-    )
-    parser.add_argument(
-        "-l",
-        "--client-path",
-        type=str,
-        required=False,
-        default="awyes.py",
-        help="Path to user specified clients",
-    )
-    parser.add_argument(
-        "-d",
-        "--pipfile-path",
+        "-p",
+        "--path",
         type=str,
         required=False,
         default="Pipfile",
@@ -127,18 +123,18 @@ def main():
 
     # Load the env
     try:
-        load_env(args.env_path)
+        load_env(args.path)
     except:
-        print(f"WARNING: could not load env {args.env_path}, using system env.")
+        print(f"WARNING: could not load env {args.path}, using system env.")
 
     # Load the config
-    config = load_config(args.config_path)
+    config = load_config(args.path)
 
     # Inject the user provided clients
     try:
-        clients = load_clients(args.client_path, args.pipfile_path)
+        clients = load_clients(args.path)
     except:
-        raise ValueError(f"couldn't find any clients at: {args.client_path}")
+        raise ValueError(f"couldn't find any clients at: {args.path}")
 
     # Create and run the deployment
     awyes.deploy.Deployment(args, config, clients).run(
