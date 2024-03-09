@@ -10,7 +10,6 @@ from .utils import rgetattr, rsetattr, Colors
 class Deployment:
     MATCH_REF = "reference"
     CACHE_REGEX = r"\$\((?P<reference>.*?)\)"
-    ACTION_REGEX = r"^\w+\.\w+\.\w+"
 
     def __init__(self, flags, config, clients):
         """Initialize the deployment."""
@@ -42,10 +41,15 @@ class Deployment:
     def find_recursive_actions(self, args):
         """Look through the args dict and find all actions for cache references."""
         return [
-            re.findall(Deployment.ACTION_REGEX, cache_reference).pop()
+            ".".join(action_prefixes)
             for cache_reference in re.findall(
                 Deployment.CACHE_REGEX, json.dumps(args, sort_keys=True)
             )
+            for action_prefixes in [
+                cache_reference.split(".")[:i]
+                for i, _ in enumerate(cache_reference.split("."))
+            ]
+            if ".".join(action_prefixes) in self.config
         ]
 
     def run(self, actions):
