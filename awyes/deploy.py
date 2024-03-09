@@ -5,12 +5,10 @@ import textwrap
 import collections
 
 from .utils import rgetattr, rsetattr, Colors
+from .awyes import USER_CLIENT_MODULE_NAME, DOT, MATCH_REF, CACHE_REGEX
 
 
 class Deployment:
-    MATCH_REF = "reference"
-    CACHE_REGEX = r"\$\((?P<reference>.*?)\)"
-
     def __init__(self, flags, config, clients):
         """Initialize the deployment."""
         self.cache = (nested_dict := lambda: collections.defaultdict(nested_dict))()
@@ -32,8 +30,8 @@ class Deployment:
         """Resolve all cache references in the args dict."""
         return json.loads(
             re.sub(
-                Deployment.CACHE_REGEX,
-                lambda m: rgetattr(self.cache, m.group(Deployment.MATCH_REF)),
+                CACHE_REGEX,
+                lambda m: rgetattr(self.cache, m.group(MATCH_REF)),
                 json.dumps(args, sort_keys=True),
             )
         )
@@ -41,15 +39,15 @@ class Deployment:
     def find_recursive_actions(self, args):
         """Look through the args dict and find all actions for cache references."""
         return [
-            ".".join(action_prefixes)
+            DOT.join(action_prefixes)
             for cache_reference in re.findall(
-                Deployment.CACHE_REGEX, json.dumps(args, sort_keys=True)
+                CACHE_REGEX, json.dumps(args, sort_keys=True)
             )
             for action_prefixes in [
-                cache_reference.split(".")[:i]
-                for i, _ in enumerate(cache_reference.split("."))
+                cache_reference.split(DOT)[:i]
+                for i, _ in enumerate(cache_reference.split(DOT))
             ]
-            if ".".join(action_prefixes) in self.config
+            if DOT.join(action_prefixes) in self.config
         ]
 
     def run(self, actions):
@@ -61,7 +59,7 @@ class Deployment:
     def execute(self, action, seen=set()):
         """Execute an action."""
         # Split the action into its components
-        *namespace, client_name, fn_name = action.split(".")
+        *namespace, client_name, fn_name = action.split(DOT)
         id = f"{'.'.join(namespace)}.{client_name}.{fn_name}"
 
         # If we've already seen this action when recursing, return
@@ -81,7 +79,11 @@ class Deployment:
         try:
             fn = rgetattr(
                 self.clients,
-                fn_name if client_name == "user" else f"{client_name}.{fn_name}",
+                (
+                    fn_name
+                    if client_name == USER_CLIENT_MODULE_NAME
+                    else f"{client_name}.{fn_name}"
+                ),
             )
         except Exception as e:
             self.print_status("Could not resolve function", Colors.FAIL, "✗")
