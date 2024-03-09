@@ -61,13 +61,14 @@ class Deployment:
     def execute(self, action, seen=set()):
         """Execute an action."""
         # Split the action into its components
-        *ns, client_name, fn_name = action.split(".")
-        id = f"{'.'.join(ns)}.{client_name}.{fn_name}"
+        *namespace, client_name, fn_name = action.split(".")
+        id = f"{'.'.join(namespace)}.{client_name}.{fn_name}"
 
         # If we've already seen this action when recursing, return
         if id in seen:
             return
-        seen.add(id)
+        else:
+            seen.add(id)
 
         # Execute actions recursively
         for dep_action in self.find_recursive_actions(self.config[action]):
