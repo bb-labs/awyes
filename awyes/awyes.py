@@ -10,20 +10,18 @@ import pathlib
 import subprocess
 import collections
 import importlib.util
-import awyes.deploy
 
-DOT = "."
-NEW_LINE = "\n"
-MATCH_REF = "reference"
-CACHE_REGEX = r"\$\((?P<reference>.*?)\)"
-
-USER_ENV_PATH = "*.env*"
-USER_PIPFILE_PATH = "Pipfile"
-USER_CLIENT_MODULE_NAME = "local"
-USER_CLIENT_PATH_PREFIXES = "awyes.*"
-USER_CLIENT_PATH_SUFFIXES = (".py",)
-USER_CONFIG_PATH_PREFIXES = "awyes.*"
-USER_CONFIG_PATH_SUFFIXES = (".yaml", ".yml")
+from .deploy import Deployment
+from .constants import (
+    NEW_LINE,
+    USER_ENV_PATH,
+    USER_PIPFILE_PATH,
+    USER_CLIENT_MODULE_NAME,
+    USER_CLIENT_PATH_PREFIXES,
+    USER_CLIENT_PATH_SUFFIXES,
+    USER_CONFIG_PATH_PREFIXES,
+    USER_CONFIG_PATH_SUFFIXES,
+)
 
 
 def load_config(path):
@@ -141,9 +139,7 @@ def main():
         raise ValueError(f"couldn't find any clients at: {args.path}")
 
     # Create and run the deployment
-    awyes.deploy.Deployment(args, config, clients).run(
-        get_actions(config, args.actions)
-    )
+    Deployment(args, config, clients).run(get_actions(config, args.actions))
 
 
 if __name__ == "__main__":

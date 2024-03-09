@@ -5,7 +5,12 @@ import textwrap
 import collections
 
 from .utils import rgetattr, rsetattr, Colors
-from .awyes import USER_CLIENT_MODULE_NAME, DOT, MATCH_REF, CACHE_REGEX
+from .constants import (
+    DOT,
+    MATCH_REF,
+    CACHE_REGEX,
+    USER_CLIENT_MODULE_NAME,
+)
 
 
 class Deployment:
