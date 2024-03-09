@@ -88,7 +88,7 @@ class Deployment:
             self.print_status(e, Colors.FAIL, "✗")
             return
 
-        # If were not quiet and are dry running, print the unresolved args
+        # If we're not quiet and are dry running, print the unresolved args
         if self.flags.dry:
             if not self.flags.quiet:
                 self.print_status(self.config[action], Colors.OKBLUE, "→")
@@ -103,7 +103,7 @@ class Deployment:
             self.print_status(e, Colors.FAIL, "✗")
             return
 
-        # If were not quiet, print the resolved args
+        # If we're not quiet, print the resolved args
         if not self.flags.quiet:
             self.print_status(args, Colors.OKBLUE, "→")
 
@@ -126,7 +126,7 @@ class Deployment:
             self.print_status(e, Colors.FAIL, "✗")
             return
 
-        # If were not quiet, print the result
+        # If we're not quiet, print the result
         if not self.flags.quiet:
             self.print_status(value, Colors.OKGREEN, "✓")
 
