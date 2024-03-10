@@ -2,6 +2,7 @@ import re
 import json
 import types
 import textwrap
+import traceback
 import collections
 
 from .utils import rgetattr, rsetattr, Colors
@@ -36,23 +37,21 @@ class Deployment:
         return json.loads(
             re.sub(
                 CACHE_REGEX,
-                lambda m: rgetattr(self.cache, m.group(MATCH_REF)),
-                json.dumps(args, sort_keys=True),
+                lambda match: json.dumps(rgetattr(self.cache, match.group(MATCH_REF))),
+                json.dumps(args),
             )
         )
 
     def find_recursive_actions(self, args):
         """Look through the args dict and find all actions for cache references."""
         return [
-            DOT.join(action_prefixes)
-            for cache_reference in re.findall(
-                CACHE_REGEX, json.dumps(args, sort_keys=True)
-            )
+            action
+            for cache_reference in re.findall(CACHE_REGEX, json.dumps(args))
             for action_prefixes in [
                 cache_reference.split(DOT)[:i]
-                for i, _ in enumerate(cache_reference.split(DOT))
+                for i in range(len(cache_reference.split(DOT)))
             ]
-            if DOT.join(action_prefixes) in self.config
+            if (action := DOT.join(action_prefixes)) in self.config
         ]
 
     def run(self, actions):
@@ -64,8 +63,8 @@ class Deployment:
     def execute(self, action, seen=set()):
         """Execute an action."""
         # Split the action into its components
-        *namespace, client_name, fn_name = action.split(DOT)
-        id = f"{'.'.join(namespace)}.{client_name}.{fn_name}"
+        *namespaces, client_name, fn_name = action.split(DOT)
+        id = f"{DOT.join(namespaces)}.{client_name}.{fn_name}"
 
         # If we've already seen this action when recursing, return
         if id in seen:
@@ -92,7 +91,7 @@ class Deployment:
             )
         except Exception as e:
             self.print_status("Could not resolve function", Colors.FAIL, "✗")
-            self.print_status(e, Colors.FAIL, "✗")
+            traceback.print_exception(e)
             return
 
         # If we're not quiet and are dry running, print the unresolved args
@@ -107,11 +106,11 @@ class Deployment:
         except Exception as e:
             self.print_status("Could not resolve args", Colors.FAIL, "✗")
             self.print_status(self.config[action], Colors.FAIL, "✗")
-            self.print_status(e, Colors.FAIL, "✗")
+            traceback.print_exception(e)
             return
 
         # If we're not quiet, print the resolved args
-        if not self.flags.quiet:
+        if not self.flags.quiet and args:
             self.print_status(args, Colors.OKBLUE, "→")
 
         # Try to execute the function
@@ -130,7 +129,7 @@ class Deployment:
                 value = list(value)
         except Exception as e:
             self.print_status("Could not execute function", Colors.FAIL, "✗")
-            self.print_status(e, Colors.FAIL, "✗")
+            traceback.print_exception(e)
             return
 
         # If we're not quiet, print the result
@@ -139,8 +138,8 @@ class Deployment:
 
         # Try to cache the result
         try:
-            rsetattr(self.cache, id, value)
+            rsetattr(self.cache, id, json.loads(json.dumps(value, default=str)))
         except Exception as e:
             self.print_status("Could not cache result", Colors.FAIL, "✗")
-            self.print_status(e, Colors.FAIL, "✗")
+            traceback.print_exception(e)
             return
