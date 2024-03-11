@@ -28,7 +28,7 @@ def load_config(path):
     collapse = lambda dl: dict(collections.ChainMap(*dl))
 
     return collapse(
-        collapse(yaml.safe_load_all(os.path.expandvars(p.read_text())))
+        collapse(reversed(list(yaml.safe_load_all(os.path.expandvars(p.read_text())))))
         for p in pathlib.Path(path).resolve().rglob(USER_CONFIG_PATH_PREFIXES)
         if p.suffix in USER_CONFIG_PATH_SUFFIXES
     )
