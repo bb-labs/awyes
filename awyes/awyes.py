@@ -138,8 +138,11 @@ def main():
     except:
         raise ValueError(f"couldn't find any clients at: {args.path}")
 
-    # Create and run the deployment
-    Deployment(args, config, clients).run(get_actions(config, args.actions))
+    # Create and run the deployment if valid actions are found
+    if not (actions := get_actions(config, args.actions)):
+        raise ValueError(f"no actions found. Received: {args.actions}")
+
+    Deployment(args, config, clients).run(actions)
 
 
 if __name__ == "__main__":
