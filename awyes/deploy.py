@@ -7,6 +7,9 @@ import collections
 
 from .utils import rgetattr, rsetattr, Colors
 from .constants import (
+    X,
+    CHECK,
+    ARROW,
     DOT,
     MATCH_REF,
     CACHE_REGEX,
@@ -48,7 +51,8 @@ class Deployment:
             action
             for cache_reference in re.findall(CACHE_REGEX, json.dumps(args))
             for action_prefixes in [
-                cache_reference.split(DOT)[:i]
+                # Generate all prefixes of the cache reference to find matching actions
+                cache_reference.split(DOT)[: i + 1]
                 for i in range(len(cache_reference.split(DOT)))
             ]
             if (action := DOT.join(action_prefixes)) in self.config
@@ -90,28 +94,28 @@ class Deployment:
                 ),
             )
         except Exception as e:
-            self.print_status("Could not resolve function", Colors.FAIL, "✗")
+            self.print_status("Could not resolve function", Colors.FAIL, X)
             traceback.print_exception(e)
             return
 
         # If we're not quiet and are dry running, print the unresolved args
         if self.flags.dry:
             if not self.flags.quiet:
-                self.print_status(self.config[action], Colors.OKBLUE, "→")
+                self.print_status(self.config[action], Colors.OKBLUE, ARROW)
             return
 
         # Try to resolve the args
         try:
             args = self.resolve(self.config[action])
         except Exception as e:
-            self.print_status("Could not resolve args", Colors.FAIL, "✗")
-            self.print_status(self.config[action], Colors.FAIL, "✗")
+            self.print_status("Could not resolve args", Colors.FAIL, X)
+            self.print_status(self.config[action], Colors.FAIL, X)
             traceback.print_exception(e)
             return
 
         # If we're not quiet, print the resolved args
         if not self.flags.quiet and args:
-            self.print_status(args, Colors.OKBLUE, "→")
+            self.print_status(args, Colors.OKBLUE, ARROW)
 
         # Try to execute the function
         try:
@@ -128,18 +132,18 @@ class Deployment:
             if isinstance(value, types.GeneratorType):
                 value = list(value)
         except Exception as e:
-            self.print_status("Could not execute function", Colors.FAIL, "✗")
+            self.print_status("Could not execute function", Colors.FAIL, X)
             traceback.print_exception(e)
             return
 
         # If we're not quiet, print the result
-        if not self.flags.quiet:
-            self.print_status(value, Colors.OKGREEN, "✓")
+        if not self.flags.quiet and value:
+            self.print_status(value, Colors.OKGREEN, CHECK)
 
         # Try to cache the result
         try:
             rsetattr(self.cache, id, json.loads(json.dumps(value, default=str)))
         except Exception as e:
-            self.print_status("Could not cache result", Colors.FAIL, "✗")
+            self.print_status("Could not cache result", Colors.FAIL, X)
             traceback.print_exception(e)
             return

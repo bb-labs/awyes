@@ -1,4 +1,7 @@
+X = "✗"
 DOT = "."
+CHECK = "✓"
+ARROW = "→"
 QUOTE = '"'
 NEW_LINE = "\n"
 MATCH_REF = "reference"
