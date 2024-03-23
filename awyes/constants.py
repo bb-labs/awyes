@@ -7,7 +7,7 @@ NEW_LINE = "\n"
 MATCH_REF = "reference"
 CACHE_REGEX = r"\"\$\((?P<reference>.*?)\)\""
 
-USER_ENV_PATH = "*.env*"
+USER_ENV_PATH = ".env*"
 USER_PIPFILE_PATH = "Pipfile"
 USER_CLIENT_MODULE_NAME = "local"
 USER_CLIENT_PATH_PREFIXES = "awyes.*"
