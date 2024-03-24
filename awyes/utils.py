@@ -1,4 +1,8 @@
-from functools import reduce
+import re
+import json
+import functools
+
+from .constants import MATCH_REF, CACHE_REGEX
 
 
 class Colors:
@@ -31,10 +35,27 @@ def rgetattr(context, accessor):
     a = accessor
     keys = a if isinstance(a, list) else filter(None, a.split("."))
 
-    return reduce(lambda result, key: subscript(result, key), keys, context)
+    return functools.reduce(lambda result, key: subscript(result, key), keys, context)
 
 
 def rsetattr(context, accessor, value):
     *target, final = accessor.split(".")
 
     rgetattr(context, target)[sanitize_key(final)] = value
+
+
+def cache_decoder(cache):
+    class CacheDecoder(json.JSONDecoder):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            def parse_string(*a, **ka):
+                string, end = json.decoder.scanstring(*a, **ka)
+                if match := re.match(CACHE_REGEX, string):
+                    return rgetattr(cache, match.group(MATCH_REF)), end
+                return string, end
+
+            self.parse_string = parse_string
+            self.scan_once = json.scanner.py_make_scanner(self)
+
+    return CacheDecoder

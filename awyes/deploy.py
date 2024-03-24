@@ -5,13 +5,12 @@ import textwrap
 import traceback
 import collections
 
-from .utils import rgetattr, rsetattr, Colors
+from .utils import rgetattr, rsetattr, Colors, cache_decoder
 from .constants import (
     X,
     CHECK,
     ARROW,
     DOT,
-    MATCH_REF,
     CACHE_REGEX,
     USER_CLIENT_MODULE_NAME,
 )
@@ -37,13 +36,7 @@ class Deployment:
 
     def resolve(self, args):
         """Resolve all cache references in the args dict."""
-        return json.loads(
-            re.sub(
-                CACHE_REGEX,
-                lambda match: json.dumps(rgetattr(self.cache, match.group(MATCH_REF))),
-                json.dumps(args),
-            )
-        )
+        return json.loads(json.dumps(args), cls=cache_decoder(self.cache))
 
     def find_recursive_actions(self, args):
         """Look through the args dict and find all actions for cache references."""
@@ -142,7 +135,7 @@ class Deployment:
 
         # Try to cache the result
         try:
-            rsetattr(self.cache, id, json.loads(json.dumps(value, default=str)))
+            rsetattr(self.cache, id, value)
         except Exception as e:
             self.print_status("Could not cache result", Colors.FAIL, X)
             traceback.print_exception(e)
