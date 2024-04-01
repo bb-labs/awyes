@@ -4,8 +4,8 @@ import json
 import types
 import textwrap
 import collections
+import rich.console
 
-from rich.console import Console
 from .utils import rgetattr, rsetattr, cache_decoder, Colors
 from .constants import (
     X,
@@ -13,6 +13,7 @@ from .constants import (
     ARROW,
     DOT,
     CACHE_REF,
+    ANIMATION_SLEEP,
     USER_CLIENT_MODULE_NAME,
 )
 
@@ -74,28 +75,29 @@ class Deployment:
         for dep_action in self.find_recursive_actions(self.config[action]):
             self.execute(dep_action, seen)
 
+        # Try to get the function from the client
+        try:
+            fn = rgetattr(
+                self.clients,
+                (
+                    fn_name
+                    if client_name == USER_CLIENT_MODULE_NAME
+                    else f"{client_name}.{fn_name}"
+                ),
+            )
+        except Exception:
+            self.print_status(id, Colors.FAIL, X)
+            raise
+
+        # If we're dry running, print the args (unresolved)
+        if self.flags.dry:
+            print(f"{Colors.OKBLUE}{id}{Colors.ENDC}")
+            self.print_status(self.config[action], Colors.OKBLUE, ARROW)
+            return
+
         # Print the action
-        with Console().status(f"[bold grey]{id}"):
-            time.sleep(1.5)
-
-            # Try to get the function from the client
-            try:
-                fn = rgetattr(
-                    self.clients,
-                    (
-                        fn_name
-                        if client_name == USER_CLIENT_MODULE_NAME
-                        else f"{client_name}.{fn_name}"
-                    ),
-                )
-            except Exception:
-                self.print_status(id, Colors.FAIL, X)
-                raise
-
-            # If we're dry running, print the args (unresolved)
-            if self.flags.dry:
-                self.print_status(self.config[action], Colors.OKBLUE, ARROW)
-                return
+        with rich.console.Console().status(f"[bold grey]{id}"):
+            time.sleep(ANIMATION_SLEEP)
 
             # Try to resolve the args
             try:

@@ -4,6 +4,7 @@ CHECK = "✓"
 ARROW = "→"
 QUOTE = '"'
 NEW_LINE = "\n"
+ANIMATION_SLEEP = 1.5
 MATCH_REF = "reference"
 CACHE_REF = r"\$\((?P<reference>.*?)\)"
 
