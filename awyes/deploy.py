@@ -2,11 +2,10 @@ import re
 import time
 import json
 import types
-import textwrap
 import collections
 import rich.console
 
-from .utils import rgetattr, rsetattr, cache_decoder, Colors
+from .utils import rgetattr, rsetattr, cache_decoder, print_status, Colors
 from .constants import (
     X,
     CHECK,
@@ -25,16 +24,6 @@ class Deployment:
         self.flags = flags
         self.config = config
         self.clients = clients
-
-    def print_status(self, value, status, indicator):
-        """Print a status message."""
-        print(
-            textwrap.indent(
-                json.dumps(value, indent=2, default=str),
-                f"{status}{indicator} {Colors.ENDC}",
-                lambda _: True,
-            )
-        )
 
     def resolve(self, args):
         """Resolve all cache references in the args dict."""

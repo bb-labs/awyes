@@ -1,5 +1,6 @@
 import re
 import json
+import textwrap
 import functools
 
 from .constants import MATCH_REF, CACHE_REF
@@ -15,6 +16,17 @@ class Colors:
     ENDC = "\033[0m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
+
+
+def print_status(value, status, indicator):
+    """Print a status message."""
+    print(
+        textwrap.indent(
+            value if type(value) is str else json.dumps(value, indent=2, default=str),
+            f"{status}{indicator} {Colors.ENDC}",
+            lambda _: True,
+        )
+    )
 
 
 def sanitize_key(key):
