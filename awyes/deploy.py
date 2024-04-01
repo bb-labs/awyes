@@ -75,13 +75,13 @@ class Deployment:
                 ),
             )
         except Exception:
-            self.print_status(id, Colors.FAIL, X)
+            print_status(id, Colors.FAIL, X)
             raise
 
         # If we're dry running, print the args (unresolved)
         if self.flags.dry:
             print(f"{Colors.OKBLUE}{id}{Colors.ENDC}")
-            self.print_status(self.config[action], Colors.OKBLUE, ARROW)
+            print_status(self.config[action], Colors.OKBLUE, ARROW)
             return
 
         # Print the action
@@ -92,13 +92,13 @@ class Deployment:
             try:
                 args = self.resolve(self.config[action])
             except Exception:
-                self.print_status(id, Colors.FAIL, X)
-                self.print_status(self.config[action], Colors.FAIL, X)
+                print_status(id, Colors.FAIL, X)
+                print_status(self.config[action], Colors.FAIL, X)
                 raise
 
             # If we're verbose, print the resolved args
             if self.flags.verbose and args:
-                self.print_status(args, Colors.OKBLUE, ARROW)
+                print_status(args, Colors.OKBLUE, ARROW)
 
             # Try to execute the function
             try:
@@ -115,20 +115,20 @@ class Deployment:
                 if isinstance(value, types.GeneratorType):
                     value = list(value)
             except Exception:
-                self.print_status(id, Colors.FAIL, X)
-                self.print_status(self.config[action], Colors.FAIL, X)
+                print_status(id, Colors.FAIL, X)
+                print_status(self.config[action], Colors.FAIL, X)
                 raise
 
             # If we're verbose, print the result
             if self.flags.verbose and value:
-                self.print_status(value, Colors.OKGREEN, CHECK)
+                print_status(value, Colors.OKGREEN, CHECK)
 
             # Try to cache the result
             try:
                 rsetattr(self.cache, id, value)
             except Exception:
-                self.print_status(id, Colors.FAIL, X)
-                self.print_status(value, Colors.FAIL, X)
+                print_status(id, Colors.FAIL, X)
+                print_status(value, Colors.FAIL, X)
                 raise
 
-        self.print_status(id, Colors.OKGREEN, CHECK)
+        print_status(id, Colors.OKGREEN, CHECK)
