@@ -2,7 +2,7 @@ import re
 import json
 import functools
 
-from .constants import MATCH_REF, CACHE_REGEX
+from .constants import MATCH_REF, CACHE_REF
 
 
 class Colors:
@@ -50,10 +50,12 @@ def cache_decoder(cache):
             super().__init__(*args, **kwargs)
 
             def parse_string(*a, **ka):
-                string, end = json.decoder.scanstring(*a, **ka)
-                if match := re.match(CACHE_REGEX, string):
-                    return rgetattr(cache, match.group(MATCH_REF)), end
-                return string, end
+                s, e = json.decoder.scanstring(*a, **ka)
+                if m := re.fullmatch(CACHE_REF, s):
+                    return rgetattr(cache, m.group(MATCH_REF)), e
+                if m := re.search(CACHE_REF, s):
+                    return re.sub(CACHE_REF, rgetattr(cache, m.group(MATCH_REF)), s), e
+                return s, e
 
             self.parse_string = parse_string
             self.scan_once = json.scanner.py_make_scanner(self)

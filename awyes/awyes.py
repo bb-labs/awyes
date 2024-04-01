@@ -98,8 +98,8 @@ def get_arguments():
         help="Preview the actions without running them",
     )
     parser.add_argument(
-        "-q",
-        "--quiet",
+        "-v",
+        "--verbose",
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Only show the action names",

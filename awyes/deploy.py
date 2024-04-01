@@ -1,17 +1,18 @@
 import re
+import time
 import json
 import types
 import textwrap
-import traceback
 import collections
 
-from .utils import rgetattr, rsetattr, Colors, cache_decoder
+from rich.console import Console
+from .utils import rgetattr, rsetattr, cache_decoder, Colors
 from .constants import (
     X,
     CHECK,
     ARROW,
     DOT,
-    CACHE_REGEX,
+    CACHE_REF,
     USER_CLIENT_MODULE_NAME,
 )
 
@@ -42,7 +43,7 @@ class Deployment:
         """Look through the args dict and find all actions for cache references."""
         return [
             action
-            for cache_reference in re.findall(CACHE_REGEX, json.dumps(args))
+            for cache_reference in re.findall(CACHE_REF, json.dumps(args))
             for action_prefixes in [
                 # Generate all prefixes of the cache reference to find matching actions
                 cache_reference.split(DOT)[: i + 1]
@@ -74,69 +75,69 @@ class Deployment:
             self.execute(dep_action, seen)
 
         # Print the action
-        print(f"{Colors.OKCYAN}{id}{Colors.ENDC}")
+        with Console().status(f"[bold grey]{id}"):
+            time.sleep(1.5)
 
-        # Try to get the function from the client
-        try:
-            fn = rgetattr(
-                self.clients,
-                (
-                    fn_name
-                    if client_name == USER_CLIENT_MODULE_NAME
-                    else f"{client_name}.{fn_name}"
-                ),
-            )
-        except Exception as e:
-            self.print_status("Could not resolve function", Colors.FAIL, X)
-            traceback.print_exception(e)
-            return
+            # Try to get the function from the client
+            try:
+                fn = rgetattr(
+                    self.clients,
+                    (
+                        fn_name
+                        if client_name == USER_CLIENT_MODULE_NAME
+                        else f"{client_name}.{fn_name}"
+                    ),
+                )
+            except Exception:
+                self.print_status(id, Colors.FAIL, X)
+                raise
 
-        # If we're not quiet and are dry running, print the unresolved args
-        if self.flags.dry:
-            if not self.flags.quiet:
+            # If we're dry running, print the args (unresolved)
+            if self.flags.dry:
                 self.print_status(self.config[action], Colors.OKBLUE, ARROW)
-            return
+                return
 
-        # Try to resolve the args
-        try:
-            args = self.resolve(self.config[action])
-        except Exception as e:
-            self.print_status("Could not resolve args", Colors.FAIL, X)
-            self.print_status(self.config[action], Colors.FAIL, X)
-            traceback.print_exception(e)
-            return
+            # Try to resolve the args
+            try:
+                args = self.resolve(self.config[action])
+            except Exception:
+                self.print_status(id, Colors.FAIL, X)
+                self.print_status(self.config[action], Colors.FAIL, X)
+                raise
 
-        # If we're not quiet, print the resolved args
-        if not self.flags.quiet and args:
-            self.print_status(args, Colors.OKBLUE, ARROW)
+            # If we're verbose, print the resolved args
+            if self.flags.verbose and args:
+                self.print_status(args, Colors.OKBLUE, ARROW)
 
-        # Try to execute the function
-        try:
-            if isinstance(args, dict):
-                value = fn(**args)
-            elif isinstance(args, list):
-                value = fn(*args)
-            elif args:
-                value = fn(args)
-            else:
-                value = fn()
+            # Try to execute the function
+            try:
+                if isinstance(args, dict):
+                    value = fn(**args)
+                elif isinstance(args, list):
+                    value = fn(*args)
+                elif args:
+                    value = fn(args)
+                else:
+                    value = fn()
 
-            # Auto-unpack generator results
-            if isinstance(value, types.GeneratorType):
-                value = list(value)
-        except Exception as e:
-            self.print_status("Could not execute function", Colors.FAIL, X)
-            traceback.print_exception(e)
-            return
+                # Auto-unpack generator results
+                if isinstance(value, types.GeneratorType):
+                    value = list(value)
+            except Exception:
+                self.print_status(id, Colors.FAIL, X)
+                self.print_status(self.config[action], Colors.FAIL, X)
+                raise
 
-        # If we're not quiet, print the result
-        if not self.flags.quiet and value:
-            self.print_status(value, Colors.OKGREEN, CHECK)
+            # If we're verbose, print the result
+            if self.flags.verbose and value:
+                self.print_status(value, Colors.OKGREEN, CHECK)
 
-        # Try to cache the result
-        try:
-            rsetattr(self.cache, id, value)
-        except Exception as e:
-            self.print_status("Could not cache result", Colors.FAIL, X)
-            traceback.print_exception(e)
-            return
+            # Try to cache the result
+            try:
+                rsetattr(self.cache, id, value)
+            except Exception:
+                self.print_status(id, Colors.FAIL, X)
+                self.print_status(value, Colors.FAIL, X)
+                raise
+
+        self.print_status(id, Colors.OKGREEN, CHECK)
