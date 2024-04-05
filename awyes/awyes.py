@@ -16,6 +16,7 @@ from .constants import (
     NEW_LINE,
     USER_ENV_PATH,
     USER_PIPFILE_PATH,
+    USER_PIPFILE_INSTALL_COMMAND,
     USER_CLIENT_MODULE_NAME,
     USER_CLIENT_PATH_PREFIXES,
     USER_CLIENT_PATH_SUFFIXES,
@@ -50,9 +51,7 @@ def load_clients(path):
         subprocess.run(
             [
                 sys.executable,
-                "-m",
-                "pip",
-                "install",
+                *USER_PIPFILE_INSTALL_COMMAND,
                 f"git+{meta['git']}" if "git" in meta else dep,
             ],
             stdout=subprocess.DEVNULL,
@@ -126,23 +125,20 @@ def main():
     # Load the env
     try:
         load_env(args.path)
-    except:
-        print(f"WARNING: could not load env {args.path}, using system env.")
 
-    # Load the config
-    config = load_config(args.path)
+        # Load the config
+        config = load_config(args.path)
 
-    # Inject the user provided clients
-    try:
+        # Inject the user provided clients
         clients = load_clients(args.path)
+
+        # Create and run the deployment if valid actions are found
+        if not (actions := get_actions(config, args.actions)):
+            raise ValueError(f"no actions found. Received: {args.actions}")
+
+        Deployment(args, config, clients).run(actions)
     except:
-        raise ValueError(f"couldn't find any clients at: {args.path}")
-
-    # Create and run the deployment if valid actions are found
-    if not (actions := get_actions(config, args.actions)):
-        raise ValueError(f"no actions found. Received: {args.actions}")
-
-    Deployment(args, config, clients).run(actions)
+        raise
 
 
 if __name__ == "__main__":

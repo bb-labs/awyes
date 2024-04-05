@@ -1,9 +1,6 @@
-import re
 import json
 import textwrap
 import functools
-
-from .constants import MATCH_REF, CACHE_REF
 
 
 class Colors:
@@ -18,11 +15,10 @@ class Colors:
     UNDERLINE = "\033[4m"
 
 
-def print_status(value, status, indicator):
-    """Print a status message."""
+def print_status(value, status=Colors.OKGREEN, indicator=""):
     print(
         textwrap.indent(
-            value if type(value) is str else json.dumps(value, indent=2, default=str),
+            (value if type(value) is str else json.dumps(value, indent=2, default=str)),
             f"{status}{indicator} {Colors.ENDC}",
             lambda _: True,
         )
@@ -54,22 +50,3 @@ def rsetattr(context, accessor, value):
     *target, final = accessor.split(".")
 
     rgetattr(context, target)[sanitize_key(final)] = value
-
-
-def cache_decoder(cache):
-    class CacheDecoder(json.JSONDecoder):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-            def parse_string(*a, **ka):
-                s, e = json.decoder.scanstring(*a, **ka)
-                if m := re.fullmatch(CACHE_REF, s):
-                    return rgetattr(cache, m.group(MATCH_REF)), e
-                if m := re.search(CACHE_REF, s):
-                    return re.sub(CACHE_REF, rgetattr(cache, m.group(MATCH_REF)), s), e
-                return s, e
-
-            self.parse_string = parse_string
-            self.scan_once = json.scanner.py_make_scanner(self)
-
-    return CacheDecoder

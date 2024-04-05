@@ -5,11 +5,13 @@ ARROW = "→"
 QUOTE = '"'
 NEW_LINE = "\n"
 ANIMATION_SLEEP = 1.5
-MATCH_REF = "reference"
-CACHE_REF = r"\$\((?P<reference>.*?)\)"
+MATCH = "reference"
+CACHE = r"\$\((?P<reference>.*?)\)"
+NO_EXCEPTION = (None, None, None)
 
 USER_ENV_PATH = ".env*"
 USER_PIPFILE_PATH = "Pipfile"
+USER_PIPFILE_INSTALL_COMMAND = ["-m", "pip", "install"]
 USER_CLIENT_MODULE_NAME = "local"
 USER_CLIENT_PATH_PREFIXES = "awyes.*"
 USER_CLIENT_PATH_SUFFIXES = (".py",)
