@@ -140,8 +140,8 @@ class Deployment:
                     # If we're dry running, print the action and the unresolved args
                     if self.flags.dry:
                         print_status(action, Colors.OKBLUE, CHECK)
-                        print_status(self.config[action], Colors.OKCYAN, ARROW)
-                        return
+                        if self.flags.verbose:
+                            print_status(self.config[action], Colors.OKCYAN, ARROW)
                     # If we're verbose, print the action, args, and value
                     elif self.flags.verbose:
                         print_status(action, Colors.OKGREEN, CHECK)
