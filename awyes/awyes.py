@@ -78,12 +78,17 @@ def load_clients(path):
 
 
 def get_actions(config, regexes):
-    return [
-        action
-        for regex in regexes
-        for action in config.keys()
-        if re.search(regex, action)
-    ]
+    if not (
+        actions := [
+            action
+            for regex in regexes
+            for action in config.keys()
+            if re.search(regex, action)
+        ]
+    ):
+        raise ValueError(f"no actions found. Received: {regexes}")
+
+    return actions
 
 
 def get_arguments():
@@ -122,19 +127,11 @@ def main():
     # Get the cli arguments
     args = get_arguments()
 
-    # Load the env
     try:
         load_env(args.path)
-
-        # Load the config
         config = load_config(args.path)
-
-        # Inject the user provided clients
         clients = load_clients(args.path)
-
-        # Create and run the deployment if valid actions are found
-        if not (actions := get_actions(config, args.actions)):
-            raise ValueError(f"no actions found. Received: {args.actions}")
+        actions = get_actions(config, args.actions)
 
         Deployment(args, config, clients).run(actions)
     except:

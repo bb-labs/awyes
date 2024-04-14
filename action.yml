@@ -5,6 +5,10 @@ branding:
   icon: thumbs-up
   color: white
 inputs:
+  verbose:
+    description: Enable verbose output
+    required: false
+    default: false
   path:
     description: Path to your awyes resources
     required: false
@@ -18,3 +22,4 @@ runs:
   args:
     - ${{ inputs.path }}
     - ${{ inputs.action }}
+    - ${{ inputs.verbose }}

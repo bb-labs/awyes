@@ -1,3 +1,3 @@
 #!/bin/bash
 
-awyes --path $1 $2
+awyes --verbose=$3 --path $1 $2

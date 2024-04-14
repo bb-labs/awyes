@@ -110,11 +110,9 @@ class Deployment:
                 fn = self.resolve_action(action)
 
                 # Try to resolve the args
-                args = None
                 args = self.resolve_args(self.config[action])
 
                 # Try to execute the function
-                value = None
                 if isinstance(args, dict):
                     value = fn(**args)
                 elif isinstance(args, list):
