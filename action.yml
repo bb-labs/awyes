@@ -9,6 +9,10 @@ inputs:
     description: Enable verbose output
     required: false
     default: false
+  dryrun:
+    description: Enable dryrun mode
+    required: false
+    default: false
   path:
     description: Path to your awyes resources
     required: false
@@ -23,3 +27,4 @@ runs:
     - ${{ inputs.path }}
     - ${{ inputs.action }}
     - ${{ inputs.verbose }}
+    - ${{ inputs.dryrun }}
