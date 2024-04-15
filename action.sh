@@ -1,15 +1,11 @@
 #!/bin/bash
 
-if [ "$3" = true ]; then
-    echo "$3 is true"
+if [ $3 = true ] && [ $4 = true ]; then
+    awyes --verbose --dry --path $1 $2
+elif [ $3 = true ]; then
+    awyes --verbose --path $1 $2
+elif [ $4 = true ]; then
+    awyes --dry --path $1 $2
 else
-    echo "$3 is not true"
+    awyes --path $1 $2
 fi
-
-if [ "$4" = true ]; then
-    echo "$4 is true"
-else
-    echo "$4 is not true"
-fi
-
-awyes --path $1 $2
