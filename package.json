@@ -2,7 +2,7 @@
   "name": "@the-sage-group/awyes",
   "version": "0.1.3",
   "description": "Quickly and easily create workflows to facilitate production infrastructure",
-  "bin": "./index.tsx",
+  "bin": "./index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bb-labs/awyes.git"
@@ -16,8 +16,5 @@
   "bugs": {
     "url": "https://github.com/bb-labs/awyes/issues"
   },
-  "homepage": "https://github.com/bb-labs/awyes#readme",
-  "devDependencies": {
-    "@types/node": "^22.7.6"
-  }
+  "homepage": "https://github.com/bb-labs/awyes#readme"
 }
