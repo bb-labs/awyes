@@ -1,0 +1,23 @@
+{
+  "name": "@the-sage-group/awyes",
+  "version": "0.1.2",
+  "description": "Quickly and easily create workflows to facilitate production infrastructure",
+  "bin": "./index.tsx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bb-labs/awyes.git"
+  },
+  "keywords": [
+    "ci/cd",
+    "aws"
+  ],
+  "author": "trumanpurnell",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bb-labs/awyes/issues"
+  },
+  "homepage": "https://github.com/bb-labs/awyes#readme",
+  "devDependencies": {
+    "@types/node": "^22.7.6"
+  }
+}
